@@ -10,26 +10,71 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-model User {
-  id         Int       @id @default(autoincrement())
-  email      String    @unique
-  username   String    @unique
-  hashedPassword   String
+model User{
+  id             String @id @default(uuid())
+  email          String @unique
+  username       String @unique 
+  hashedPassword String
+  Task           Task[]
 }
 
-model TimeStamp {
-  id             Int       @id @default(autoincrement())
-  TimeStamp      DateTime       
-  Utc            Int 
-  SensorData     Json
-  SensorId       Int 
-  Sensor         Sensor @relation(fields: [SensorId], references: [id])
+model Sensor{
+  id           String  @id @default(uuid())
+  name         String  @unique
+  code         String  @unique
+  CH4_SN       String?
+  O2_SN        String?
+  CO2_SN       String?
+  PUMP_SN      String?
+  Task         SensorOnTask[]
+  Log          Log[]
 }
 
-model Sensor {
-  id        Int       @id @default(autoincrement())
-  Name      String    @unique
-  Code       String    @unique
-  TimeStamp TimeStamp[]
+
+model Log {
+  id         String   @id @default(uuid())
+  TimeStamp  DateTime
+  Utc        Int
+  sensorId String?
+  taskId     String?
+  dataId     String @unique
+  Task       Task?    @relation(fields: [taskId], references: [id],onDelete: SetNull)
+  Data       Data     @relation(fields: [dataId], references: [id])
+  Sensor     Sensor?   @relation(fields: [sensorId], references: [id],onDelete: SetNull)
+
 }
+
+model Data {
+  id      String @id @default(uuid())
+  UTCtime Int
+  UID     BigInt
+  type    String
+  value   Float
+  logId   String @unique
+  Log     Log?    
+  }
+
+model Task {
+  id           String   @id @default(uuid())
+  startTime    DateTime
+  endTime      DateTime
+  startTimeUtc Int?
+  endTimeUTC   Int?
+  name         String   @unique
+  Log          Log[]
+  Sensor       SensorOnTask[]
+  createUser   String
+  completeUser String?
+  User         User     @relation(fields: [createUser], references: [username])
+}
+
+model SensorOnTask{
+  Task Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId String @map("task_id")
+  Sensor Sensor @relation(fields: [sensorId], references: [id], onDelete: Cascade)
+  sensorId String @map("sensor_id")
+
+   @@id([taskId, sensorId])
+  @@map("sensor_task")
+}
+

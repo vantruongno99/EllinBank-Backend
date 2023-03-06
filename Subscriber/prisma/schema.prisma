@@ -10,26 +10,82 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-model User {
-  id         Int       @id @default(autoincrement())
-  email      String    @unique
-  username   String    @unique
-  hashedPassword   String
+model User{
+  id             String @id @default(uuid())
+  email          String @unique
+  username       String @unique
+  hashedPassword String
+  Task           Task[]
 }
 
-model TimeStamp {
-  id             Int       @id @default(autoincrement())
-  TimeStamp      DateTime       
-  Utc            Int 
-  SensorData     Json
-  SensorCode     String 
-  Sensor         Sensor @relation(fields: [SensorCode], references: [Code])
+model Sensor{
+  id           String  @id @default(uuid())
+  name         String  @unique
+  code         String  @unique
+  CH4_SN       String?
+  O2_SN        String?
+  CO2_SN       String?
+  PUMP_SN      String?
+  Task         SensorOnTask[]
+  Log          Log[]
+  Schedule     Schedule[]
 }
 
-model Sensor {
-  id        Int       @id @default(autoincrement())
-  Name      String    @unique
-  Code       String    @unique
-  TimeStamp TimeStamp[]
+
+model Log {
+  id         String   @id @default(uuid())
+  TimeStamp  DateTime
+  Utc        Int
+  sensorCode String
+  TaskId     String?
+  DataId     String @unique
+  Sensor     Sensor   @relation(fields: [sensorCode], references: [code])
+  Task       Task?    @relation(fields: [TaskId], references: [id])
+  Data       Data     @relation(fields: [DataId], references: [id])
+}
+
+model Data {
+  id      String @id @default(uuid())
+  UTCtime Int
+  UID     BigInt
+  type    String
+  value   Float
+  logId   String @unique
+  Log     Log?    
+  }
+
+model Task {
+  id           String   @id @default(uuid())
+  StartTime    DateTime
+  EndTime      DateTime
+  StartTimeUtc Int?
+  EndTimeUTC   Int?
+  Name         String   @unique
+  Log          Log[]
+  Sensor       SensorOnTask[]
+  createUser   String
+  completeUser String
+  User         User     @relation(fields: [createUser], references: [username])
+  Schedule     Schedule[]  
+}
+
+model SensorOnTask{
+  Task Task  @relation(fields: [taskId], references: [id])
+  taskId String @map("task_id")
+  Sensor Sensor @relation(fields: [sensorId], references: [id])
+  sensorId String @map("sensor_id")
+
+   @@id([taskId, sensorId])
+  @@map("sensor_task")
+}
+
+model Schedule {
+  id String @id @default(uuid())
+  TaskId String 
+  SensorCode String
+  StartTimeUtc  Int 
+  EndTimeUtc  Int
+  Task   Task   @relation(fields: [TaskId], references: [id])
+  Sensor Sensor @relation(fields: [SensorCode], references: [code])
+
 }

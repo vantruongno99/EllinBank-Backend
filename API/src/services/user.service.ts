@@ -45,7 +45,7 @@ const findAllUser = async ()=> {
 }
 
 
-const findUserByUsername = async (username: string) : Promise<UserProfile> => {
+const findUserByUsername = async (username: string) : Promise<any> => {
   const user = await prisma.user.findUnique({
     where: {
       username,

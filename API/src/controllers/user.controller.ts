@@ -8,13 +8,13 @@ require('express-async-errors');
 const userRouter = Router();
 
 
-userRouter.get('/', async (req: Request, res: Response) => {
+userRouter.get('/', middleware.userExtractor, async (req: Request, res: Response) => {
     const users = await userService.findAllUser()
     res.status(200).json(users)
 })
 
-userRouter.get('/find/:username', async (req: Request, res: Response) => {
-    const requestedUser: string = req.params?.username
+userRouter.get('/:username', middleware.userExtractor, async (req: Request, res: Response) => {
+    const requestedUser: string = req.params.username
     if (!requestedUser) {
         res.status(500).send('username is blank')
         return;

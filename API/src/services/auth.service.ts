@@ -1,4 +1,4 @@
-import { RegisterInput, LoginInput } from "../models/auth.modal"
+import {LoginInput } from "../models/auth.modal"
 import bcrypt from 'bcrypt'
 import { prisma } from "../../prisma/prismaClient"
 import tokenGenerator from "../utils/tokenGenerator"

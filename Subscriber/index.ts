@@ -6,7 +6,7 @@ var client = mqtt.connect("mqtt://localhost")
 
 
 
-async function main(data:any) {
+async function main(data: any) {
     const sensor = await prisma.timeStamp.create({
         data: {
             ...data
@@ -16,12 +16,12 @@ async function main(data:any) {
 
     const getSensor = await prisma.sensor.findUnique({
         where: {
-            Code:'gaptlf',
+            Code: 'Test',
         },
         include: {
-          TimeStamp: true,
+            Log: true,
         },
-      })
+    })
     console.log(getSensor)
 }
 
@@ -44,14 +44,14 @@ client.on('message', messsageReceived);
 
 client.subscribe('mqtt/test');
 
-var timer_id = setInterval( () => { 
-    const obj ={
-        SensorCode : 'gaptlf',
-        TimeStamp : new Date(),
-        Utc : Math.floor(Date.now() / 1000),
-        SensorData : JSON.stringify({Name:'test'})
+setInterval(() => {
+    const obj = {
+        SensorCode:'Test',
+        TimeStamp: new Date(),
+        Utc: Math.floor(Date.now() / 1000),
+        SensorData: JSON.stringify({ Name: 'test' })
     }
-    publish('mqtt/test', JSON.stringify(obj)); 
+    publish('mqtt/test', JSON.stringify(obj));
 }, 5000);
 
 //publish function
