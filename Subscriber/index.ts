@@ -7,7 +7,7 @@ var client = mqtt.connect("mqtt://localhost")
 
 
 async function main(data: any) {
-    const sensor = await prisma.timeStamp.create({
+    const sensor = await prisma.log.create({
         data: {
             ...data
         },

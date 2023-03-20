@@ -1,91 +1,93 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+-- CreateTable
+CREATE TABLE `User` (
+    `id` VARCHAR(191) NOT NULL,
+    `email` VARCHAR(191) NOT NULL,
+    `username` VARCHAR(191) NOT NULL,
+    `hashedPassword` VARCHAR(191) NOT NULL,
 
-generator client {
-  provider = "prisma-client-js"
-}
+    UNIQUE INDEX `User_email_key`(`email`),
+    UNIQUE INDEX `User_username_key`(`username`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-}
+-- CreateTable
+CREATE TABLE `Sensor` (
+    `id` VARCHAR(191) NOT NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `code` VARCHAR(191) NOT NULL,
+    `CH4_SN` VARCHAR(191) NULL,
+    `O2_SN` VARCHAR(191) NULL,
+    `CO2_SN` VARCHAR(191) NULL,
+    `PUMP_SN` VARCHAR(191) NULL,
 
-model User{
-  id             String @id @default(uuid())
-  email          String @unique
-  username       String @unique
-  hashedPassword String
-  Task           Task[]
-}
+    UNIQUE INDEX `Sensor_name_key`(`name`),
+    UNIQUE INDEX `Sensor_code_key`(`code`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-model Sensor{
-  id           String  @id @default(uuid())
-  name         String  @unique
-  code         String  @unique
-  CH4_SN       String?
-  O2_SN        String?
-  CO2_SN       String?
-  PUMP_SN      String?
-  Task         SensorOnTask[]
-  Log          Log[]
-  Schedule     Schedule[]
-}
+-- CreateTable
+CREATE TABLE `Log` (
+    `id` VARCHAR(191) NOT NULL,
+    `TimeStamp` DATETIME(3) NOT NULL,
+    `Utc` INTEGER NOT NULL,
+    `sensorId` VARCHAR(191) NULL,
+    `taskId` VARCHAR(191) NULL,
+    `dataId` VARCHAR(191) NOT NULL,
 
+    UNIQUE INDEX `Log_dataId_key`(`dataId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-model Log {
-  id         String   @id @default(uuid())
-  TimeStamp  DateTime
-  Utc        Int
-  sensorCode String
-  TaskId     String?
-  DataId     String @unique
-  Sensor     Sensor   @relation(fields: [sensorCode], references: [code])
-  Task       Task?    @relation(fields: [TaskId], references: [id])
-  Data       Data     @relation(fields: [DataId], references: [id])
-}
+-- CreateTable
+CREATE TABLE `Data` (
+    `id` VARCHAR(191) NOT NULL,
+    `UTCtime` INTEGER NOT NULL,
+    `UID` BIGINT NOT NULL,
+    `type` VARCHAR(191) NOT NULL,
+    `value` DOUBLE NOT NULL,
+    `logId` VARCHAR(191) NOT NULL,
 
-model Data {
-  id      String @id @default(uuid())
-  UTCtime Int
-  UID     BigInt
-  type    String
-  value   Float
-  logId   String @unique
-  Log     Log?    
-  }
+    UNIQUE INDEX `Data_logId_key`(`logId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-model Task {
-  id           String   @id @default(uuid())
-  StartTime    DateTime
-  EndTime      DateTime
-  StartTimeUtc Int?
-  EndTimeUTC   Int?
-  Name         String   @unique
-  Log          Log[]
-  Sensor       SensorOnTask[]
-  createUser   String
-  completeUser String
-  User         User     @relation(fields: [createUser], references: [username])
-  Schedule     Schedule[]  
-}
+-- CreateTable
+CREATE TABLE `Task` (
+    `id` VARCHAR(191) NOT NULL,
+    `startTime` DATETIME(3) NOT NULL,
+    `endTime` DATETIME(3) NOT NULL,
+    `startTimeUtc` INTEGER NULL,
+    `endTimeUTC` INTEGER NULL,
+    `name` VARCHAR(191) NOT NULL,
+    `createUser` VARCHAR(191) NOT NULL,
+    `completeUser` VARCHAR(191) NULL,
 
-model SensorOnTask{
-  Task Task  @relation(fields: [taskId], references: [id])
-  taskId String @map("task_id")
-  Sensor Sensor @relation(fields: [sensorId], references: [id])
-  sensorId String @map("sensor_id")
+    UNIQUE INDEX `Task_name_key`(`name`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-   @@id([taskId, sensorId])
-  @@map("sensor_task")
-}
+-- CreateTable
+CREATE TABLE `sensor_task` (
+    `task_id` VARCHAR(191) NOT NULL,
+    `sensor_id` VARCHAR(191) NOT NULL,
 
-model Schedule {
-  id String @id @default(uuid())
-  TaskId String 
-  SensorCode String
-  StartTimeUtc  Int 
-  EndTimeUtc  Int
-  Task   Task   @relation(fields: [TaskId], references: [id])
-  Sensor Sensor @relation(fields: [SensorCode], references: [code])
+    PRIMARY KEY (`task_id`, `sensor_id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-}
+-- AddForeignKey
+ALTER TABLE `Log` ADD CONSTRAINT `Log_taskId_fkey` FOREIGN KEY (`taskId`) REFERENCES `Task`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Log` ADD CONSTRAINT `Log_dataId_fkey` FOREIGN KEY (`dataId`) REFERENCES `Data`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Log` ADD CONSTRAINT `Log_sensorId_fkey` FOREIGN KEY (`sensorId`) REFERENCES `Sensor`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Task` ADD CONSTRAINT `Task_createUser_fkey` FOREIGN KEY (`createUser`) REFERENCES `User`(`username`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `sensor_task` ADD CONSTRAINT `sensor_task_task_id_fkey` FOREIGN KEY (`task_id`) REFERENCES `Task`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `sensor_task` ADD CONSTRAINT `sensor_task_sensor_id_fkey` FOREIGN KEY (`sensor_id`) REFERENCES `Sensor`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
