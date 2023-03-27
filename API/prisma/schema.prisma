@@ -10,71 +10,68 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User{
-  id             String @id @default(uuid())
+model User {
+  id             Int    @id @default(autoincrement())
   email          String @unique
-  username       String @unique 
+  username       String @unique
   hashedPassword String
   Task           Task[]
 }
 
-model Sensor{
-  id           String  @id @default(uuid())
-  name         String  @unique
-  code         String  @unique
-  CH4_SN       String?
-  O2_SN        String?
-  CO2_SN       String?
-  PUMP_SN      String?
-  Task         SensorOnTask[]
-  Log          Log[]
+model Device {
+  id        String        @unique
+  name      String        @unique
+  updateUTC DateTime?     @updatedAt
+  CH4_SN    String?
+  O2_SN     String?
+  CO2_SN    String?
+  PUMP_SN   String?
+  Task      Device_Task[]
+  Log       Log[]
 }
-
 
 model Log {
-  id         String   @id @default(uuid())
-  TimeStamp  DateTime
-  Utc        Int
-  sensorId String?
-  taskId     String?
-  dataId     String @unique
-  Task       Task?    @relation(fields: [taskId], references: [id],onDelete: SetNull)
-  Data       Data     @relation(fields: [dataId], references: [id])
-  Sensor     Sensor?   @relation(fields: [sensorId], references: [id],onDelete: SetNull)
-
+  id           Int      @id @default(autoincrement())
+  dateTimeUTC  DateTime
+  timestampUTC Int
+  deviceId     String?
+  taskId       Int?
+  logType      String
+  logValue     Float
+  logNote      String
+  Device       Device?  @relation(fields: [deviceId], references: [id])
+  Task         Task?    @relation(fields: [taskId], references: [id])
 }
-
-model Data {
-  id      String @id @default(uuid())
-  UTCtime Int
-  UID     BigInt
-  type    String
-  value   Float
-  logId   String @unique
-  Log     Log?    
-  }
 
 model Task {
-  id           String   @id @default(uuid())
+  id           Int           @id @default(autoincrement())
   startTime    DateTime
   endTime      DateTime
-  startTimeUtc Int?
-  endTimeUTC   Int?
-  name         String   @unique
+  createdUTC   Int?
+  completedUTC Int?
+  name         String        @unique
   Log          Log[]
-  Sensor       SensorOnTask[]
+  Device       Device_Task[]
   createUser   String
   completeUser String?
-  User         User     @relation(fields: [createUser], references: [username])
+  User         User          @relation(fields: [createUser], references: [username])
 }
 
-model SensorOnTask{
-  Task Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  taskId String @map("task_id")
-  Sensor Sensor @relation(fields: [sensorId], references: [id], onDelete: Cascade)
-  sensorId String @map("sensor_id")
+model Device_Task {
+  Task     Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId   Int    @map("task_id")
+  Device   Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  deviceId String @map("deviceId_id")
 
-   @@id([taskId, sensorId])
-  @@map("sensor_task")
+  @@id([taskId, deviceId])
+  @@map("Device_Task")
 }
 
+model Applog {
+  id          Int    @id @default(autoincrement())
+  taskId      Int
+  deviceId    String
+  dateTimeUTC String
+  evtType     String
+  details     String
+}

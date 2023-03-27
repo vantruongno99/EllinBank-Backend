@@ -1,5 +1,6 @@
 import { TaskInput } from "../models/task.model"
 import { prisma } from "../../prisma/prismaClient"
+import MqttHandler from "../mqtt/MqttHandler"
 
 const createTask = async (task: TaskInput, user: string | undefined) => {
   const name = task.name.trim()
@@ -35,23 +36,29 @@ const createTask = async (task: TaskInput, user: string | undefined) => {
   }
 }
 
-const assignSensor = async (taskId: string, sensorId: string) => {
+const assignSensor = async (taskId: number, deviceId: string) => {
   if (!taskId) {
-    throw ({ name: 'ValidationError', message: { email: ["can't be blank"] } });
+    throw ({ name: 'ValidationError', message: { taskId: ["can't be blank"] } });
   }
 
-  if (!sensorId) {
-    throw ({ name: 'ValidationError', message: { username: ["can't be blank"] } });
+  if (!deviceId) {
+    throw ({ name: 'ValidationError', message: { deviceId: ["can't be blank"] } });
   }
+
+  var mqttClient = new MqttHandler();
+  mqttClient.connect();
 
   try {
-    const newTask = await prisma.sensorOnTask.create({
+    const deviceTask = await prisma.device_Task.create({
       data: {
         taskId,
-        sensorId
+        deviceId
       }
     })
-    return newTask
+
+    await mqttClient.sendMessage(`CFG,REQ,${taskId}`, `ToSensor/${deviceId}`);
+    return deviceTask
+
 
   }
   catch (e: any) {
@@ -59,15 +66,18 @@ const assignSensor = async (taskId: string, sensorId: string) => {
       throw ({ name: 'ValidationError', message: `${e.meta.target} is not unique` });
     }
   }
+  finally {
+    await mqttClient.close()
+  }
 }
 
 const findAllTask = async () => {
   const tasks = await prisma.task.findMany(
     {
       include: {
-        Sensor: {
+        Device: {
           select: {
-            sensorId: true
+            deviceId: true
           }
         }
       },
@@ -77,7 +87,7 @@ const findAllTask = async () => {
   return tasks;
 }
 
-const deleteTask = async (taskId: string) => {
+const deleteTask = async (taskId: number) => {
   try {
     const deleteTask = await prisma.task.delete({
       where: {
@@ -93,7 +103,7 @@ const deleteTask = async (taskId: string) => {
 
 }
 
-const findTask = async (taskId: string) => {
+const findTask = async (taskId: number) => {
   try {
     const task = await prisma.task.findUniqueOrThrow({
       where: {
@@ -109,4 +119,4 @@ const findTask = async (taskId: string) => {
 }
 
 
-export default { createTask, assignSensor, findAllTask, deleteTask ,findTask}
+export default { createTask, assignSensor, findAllTask, deleteTask, findTask }

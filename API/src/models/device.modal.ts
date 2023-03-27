@@ -1,21 +1,20 @@
-export interface SensorInput {
+export interface DeviceInput {
     name: string;
-    code: string;
+    id: string;
 }
 
-export interface Sensor {
+export interface Device {
     id: string
     name: string
-    code: string
     CH4_SN: string | null
     O2_SN: string | null
     CO2_SN: string | null
     PUMP_SN: string | null
   }
 
-  export interface EditSensorInput {
+  export interface EditDeviceInput {
     name: string
-    code: string
+    id: string
     CH4_SN: string | null
     O2_SN: string | null
     CO2_SN: string | null

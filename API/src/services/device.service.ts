@@ -1,23 +1,26 @@
-import { SensorInput, EditSensorInput } from "../models/sensor.modal"
+import { DeviceInput, EditDeviceInput } from "../models/device.modal"
 import { prisma } from "../../prisma/prismaClient"
+import MqttHandler from "../mqtt/MqttHandler";
 
-const createSensor = async (sensor: SensorInput) => {
-  const name = sensor.name.trim()
-  const code = sensor.code.trim()
+
+
+const createDevice = async (device: DeviceInput) => {
+  const name = device.name.trim()
+  const id = device.id.trim()
 
   if (!name) {
     throw ({ name: 'ValidationError', message: { name: ["can't be blank"] } });
   }
 
-  if (!code) {
-    throw ({ name: 'ValidationError', message: { code: ["can't be blank"] } });
+  if (!id) {
+    throw ({ name: 'ValidationError', message: { id: ["can't be blank"] } });
   }
 
   try {
-    const newSensor = await prisma.sensor.create({
+    const newSensor = await prisma.device.create({
       data: {
-        name,
-        code
+        id,
+        name
       }
     })
     return newSensor
@@ -30,24 +33,24 @@ const createSensor = async (sensor: SensorInput) => {
   }
 }
 
-const editSensor = async (sensorId: string, editSensor: EditSensorInput) => {
-  const name = editSensor.name
-  const code = editSensor.code
+const editDevice = async (deviceId: string, device: EditDeviceInput) => {
+  const name = device.name
+  const id = device.id
   if (!name) {
     throw ({ name: 'ValidationError', message: { name: ["can't be blank"] } });
   }
 
-  if (!code) {
-    throw ({ name: 'ValidationError', message: { code: ["can't be blank"] } });
+  if (!id) {
+    throw ({ name: 'ValidationError', message: { id: ["can't be blank"] } });
   }
 
   try {
-    const updateSensor = await prisma.sensor.update({
+    const updateSensor = await prisma.device.update({
       where: {
-        id: sensorId
+        id: deviceId
       },
       data: {
-        ...editSensor
+        ...device
       },
     })
 
@@ -58,8 +61,8 @@ const editSensor = async (sensorId: string, editSensor: EditSensorInput) => {
   }
 }
 
-const findAllSensor = async () => {
-  const sensors = await prisma.sensor.findMany({
+const findAllDevice = async () => {
+  const sensors = await prisma.device.findMany({
     include: {
       Task: {
         select: {
@@ -72,15 +75,15 @@ const findAllSensor = async () => {
   return sensors;
 }
 
-const deleteSensor = async (sensorId: string) => {
+const deleteDevice = async (deviceId: string) => {
   try {
-    const deleteSensor = await prisma.sensor.delete({
+    const deleteDevice = await prisma.device.delete({
       where: {
-        id: sensorId,
+        id: deviceId,
       },
     })
 
-    return deleteSensor
+    return deleteDevice
   }
   catch (e: any) {
     throw ({ name: 'ValidationError', message: JSON.stringify(e) });
@@ -88,11 +91,11 @@ const deleteSensor = async (sensorId: string) => {
 }
 
 
-const findSensor = async (sensorId: string) => {
+const findDevice = async (deviceId: string) => {
   try {
-    const sensor = await prisma.sensor.findUniqueOrThrow({
+    const sensor = await prisma.device.findUniqueOrThrow({
       where: {
-        id: sensorId,
+        id: deviceId,
       },
       include: {
         Task: {
@@ -112,9 +115,9 @@ const findSensor = async (sensorId: string) => {
 }
 
 export default {
-  createSensor,
-  findAllSensor,
-  deleteSensor,
-  findSensor,
-  editSensor
+  createDevice,
+  findAllDevice,
+  deleteDevice,
+  findDevice,
+  editDevice
 }
