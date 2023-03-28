@@ -8,6 +8,10 @@ var client = mqtt.connect("mqtt://localhost")
 
 
 async function main(data: any, topic: string) {
+    const type = typeofMessage(data)
+    switch(type){
+        case "LOG"
+    }
     const test:Log = logMessageHandle(data, topic)
     if (test.taskId) {
          const qwe =  await prisma.log.create({
