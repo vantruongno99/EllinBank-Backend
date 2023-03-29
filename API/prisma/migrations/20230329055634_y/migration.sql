@@ -46,6 +46,8 @@ CREATE TABLE `Task` (
     `createdUTC` INTEGER NULL,
     `completedUTC` INTEGER NULL,
     `name` VARCHAR(191) NOT NULL,
+    `logPeriod` INTEGER NOT NULL,
+    `status` VARCHAR(191) NOT NULL DEFAULT 'Planned',
     `createUser` VARCHAR(191) NOT NULL,
     `completeUser` VARCHAR(191) NULL,
 
@@ -57,6 +59,8 @@ CREATE TABLE `Task` (
 CREATE TABLE `Device_Task` (
     `task_id` INTEGER NOT NULL,
     `deviceId_id` VARCHAR(191) NOT NULL,
+    `startTime` DATETIME(3) NOT NULL,
+    `endTime` DATETIME(3) NOT NULL,
 
     PRIMARY KEY (`task_id`, `deviceId_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

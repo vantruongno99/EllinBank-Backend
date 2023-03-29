@@ -33,8 +33,9 @@ async function main() {
             data: {
                 name: "test",
                 startTime: new Date(),
-                endTime: new Date(),
-                createUser: "test"
+                endTime: new Date(new Date().setDate((new Date()).getDate() + 1)),
+                createUser: "test",
+                logPeriod: 10
             }
         })
         console.group(newTask)
@@ -43,15 +44,15 @@ async function main() {
         console.log(e)
     }
 
-   
+
 }
 
-    main()
-        .then(async () => {
-            await prisma.$disconnect()
-        })
-        .catch(async (e) => {
-            console.error(e)
-            await prisma.$disconnect()
-            process.exit(1)
-        })
+main()
+    .then(async () => {
+        await prisma.$disconnect()
+    })
+    .catch(async (e) => {
+        console.error(e)
+        await prisma.$disconnect()
+        process.exit(1)
+    })

@@ -114,10 +114,35 @@ const findDevice = async (deviceId: string) => {
   }
 }
 
+const findAvaibleDevice = async (startTime: Date, endTime: Date) => {
+
+
+  const sensors = await prisma.device.findMany({
+    where: {
+      Task: {
+        none: {
+          Task: {
+            startTime:{
+              lte : startTime
+            },
+            endTime:{
+              gte : endTime
+            }
+          }
+        }
+      }
+    }
+  })
+
+
+  return sensors;
+}
+
 export default {
   createDevice,
   findAllDevice,
   deleteDevice,
   findDevice,
-  editDevice
+  editDevice,
+  findAvaibleDevice
 }

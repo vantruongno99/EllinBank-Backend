@@ -11,19 +11,26 @@ const createTask = async (task: TaskInput, user: string | undefined) => {
   if (!name) {
     throw ({ name: 'ValidationError', message: { name: ["can't be blank"] } });
   }
-
   if (!user) {
     throw ({ name: 'ValidationError', message: { user: ["invalid user"] } });
   }
+  if (!startTime) {
+    throw ({ name: 'ValidationError', message: { startTime: ["can't be blank"] } });
+  }
+  if (!endTime) {
+    throw ({ name: 'ValidationError', message: { endTime: ["can't be blank"] } });
+  }
+  if (new Date(endTime) < new Date(startTime)) {
+    throw ({ name: 'ValidationError', message: "" });
+  }
+
 
 
   try {
     const newTask = await prisma.task.create({
       data: {
-        name,
-        startTime: new Date(),
-        endTime: new Date(),
-        createUser: user
+        ...task,
+        createUser: user,
       }
     })
     return newTask
@@ -45,6 +52,8 @@ const assignSensor = async (taskId: number, deviceId: string) => {
     throw ({ name: 'ValidationError', message: { deviceId: ["can't be blank"] } });
   }
 
+
+
   var mqttClient = new MqttHandler();
   mqttClient.connect();
 
@@ -56,7 +65,13 @@ const assignSensor = async (taskId: number, deviceId: string) => {
       }
     })
 
-    await mqttClient.sendMessage(`CFG,REQ,${taskId}`, `ToSensor/${deviceId}`);
+    const task = await prisma.task.findUniqueOrThrow({
+      where: {
+        id: taskId,
+      }
+    })
+
+    await mqttClient.sendMessage(`CFG,REQ,${taskId},${Math.floor(Date.now() / 1000)},${Math.floor(new Date(task.startTime).getTime() / 1000)},${Math.floor(new Date(task.endTime).getTime() / 1000)},${task.logPeriod}`, `ToSensor/${deviceId}`);
     return deviceTask
 
 
@@ -72,18 +87,7 @@ const assignSensor = async (taskId: number, deviceId: string) => {
 }
 
 const findAllTask = async () => {
-  const tasks = await prisma.task.findMany(
-    {
-      include: {
-        Device: {
-          select: {
-            deviceId: true
-          }
-        }
-      },
-    }
-
-  )
+  const tasks = await prisma.task.findMany()
   return tasks;
 }
 

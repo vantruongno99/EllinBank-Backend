@@ -48,9 +48,11 @@ model Task {
   startTime    DateTime
   endTime      DateTime
   createdUTC   Int?
-  completedUTC Int?
+  completedUTC Int? 
   name         String        @unique
+  logPeriod    Int
   Log          Log[]
+  status       String      @default("Planned")
   Device       Device_Task[]
   createUser   String
   completeUser String?
@@ -62,7 +64,6 @@ model Device_Task {
   taskId   Int    @map("task_id")
   Device   Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
   deviceId String @map("deviceId_id")
-
   @@id([taskId, deviceId])
   @@map("Device_Task")
 }
