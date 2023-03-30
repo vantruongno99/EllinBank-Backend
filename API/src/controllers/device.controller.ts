@@ -24,24 +24,11 @@ deviceRouter.get('/', async (req: Request, res: Response) => {
 })
 
 deviceRouter.get('/getAvaibleDevice', async (req: Request, res: Response) => {
-    const startTime = req.query.startTime
-    const endTime = req.query.endTime
-
-    if (!startTime) {
-        res.status(500).send('username is blank')
-        return;
-    }
-    if (!endTime) {
-        res.status(500).send('username is blank')
-        return;
-    }
-
-    const StartTimeDate = new Date(startTime as string)
-    const endTimeDate = new Date(startTime as string)
-
-    const sensors = await deviceService.findAvaibleDevice(StartTimeDate,endTimeDate)
+    const sensors = await deviceService.findAvaibleDevice()
     res.status(200).json(sensors)
 })
+
+
 
 deviceRouter.get('/:deviceId', async (req: Request, res: Response) => {
     const deviceId = req.params.deviceId

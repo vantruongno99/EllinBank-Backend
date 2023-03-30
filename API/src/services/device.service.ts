@@ -1,6 +1,6 @@
 import { DeviceInput, EditDeviceInput } from "../models/device.modal"
 import { prisma } from "../../prisma/prismaClient"
-import MqttHandler from "../mqtt/MqttHandler";
+import mqttClient from "../mqtt/mqttClient"
 
 
 
@@ -106,6 +106,9 @@ const findDevice = async (deviceId: string) => {
       },
 
     })
+
+    
+
     return sensor
   }
   catch (e: any) {
@@ -114,7 +117,7 @@ const findDevice = async (deviceId: string) => {
   }
 }
 
-const findAvaibleDevice = async (startTime: Date, endTime: Date) => {
+const findAvaibleDevice = async () => {
 
 
   const sensors = await prisma.device.findMany({
@@ -122,12 +125,9 @@ const findAvaibleDevice = async (startTime: Date, endTime: Date) => {
       Task: {
         none: {
           Task: {
-            startTime:{
-              lte : startTime
+            status:{
+              not  : "COMPLETED"
             },
-            endTime:{
-              gte : endTime
-            }
           }
         }
       }

@@ -19,7 +19,7 @@ model User {
 }
 
 model Device {
-  id        String        @unique
+  id        String        @unique @id
   name      String        @unique
   updateUTC DateTime?     @updatedAt
   CH4_SN    String?
@@ -52,7 +52,7 @@ model Task {
   name         String        @unique
   logPeriod    Int
   Log          Log[]
-  status       String      @default("Planned")
+  status       String      @default("STARTED")
   Device       Device_Task[]
   createUser   String
   completeUser String?

@@ -1,6 +1,6 @@
 import { TaskInput } from "../models/task.model"
 import { prisma } from "../../prisma/prismaClient"
-import MqttHandler from "../mqtt/MqttHandler"
+import mqttClient from "../mqtt/mqttClient"
 
 const createTask = async (task: TaskInput, user: string | undefined) => {
   const name = task.name.trim()
@@ -52,11 +52,6 @@ const assignSensor = async (taskId: number, deviceId: string) => {
     throw ({ name: 'ValidationError', message: { deviceId: ["can't be blank"] } });
   }
 
-
-
-  var mqttClient = new MqttHandler();
-  mqttClient.connect();
-
   try {
     const deviceTask = await prisma.device_Task.create({
       data: {
@@ -71,7 +66,9 @@ const assignSensor = async (taskId: number, deviceId: string) => {
       }
     })
 
-    await mqttClient.sendMessage(`CFG,REQ,${taskId},${Math.floor(Date.now() / 1000)},${Math.floor(new Date(task.startTime).getTime() / 1000)},${Math.floor(new Date(task.endTime).getTime() / 1000)},${task.logPeriod}`, `ToSensor/${deviceId}`);
+    console.log(deviceId)
+
+    mqttClient.sendMessage(`CFG,REQ,${taskId},${Math.floor(Date.now() / 1000)},${Math.floor(new Date(task.startTime).getTime() / 1000)},${Math.floor(new Date(task.endTime).getTime() / 1000)},${task.logPeriod}`, `ToSensor/${deviceId}`);
     return deviceTask
 
 
@@ -80,9 +77,6 @@ const assignSensor = async (taskId: number, deviceId: string) => {
     if (e.meta.target) {
       throw ({ name: 'ValidationError', message: `${e.meta.target} is not unique` });
     }
-  }
-  finally {
-    await mqttClient.close()
   }
 }
 
@@ -113,6 +107,13 @@ const findTask = async (taskId: number) => {
       where: {
         id: taskId,
       },
+      include: {
+        Device: {
+          select: {
+            Device: true
+          }
+        }
+      },
     })
     return task
   }
@@ -122,5 +123,53 @@ const findTask = async (taskId: number) => {
   }
 }
 
+const completeTask = async (taskId: number, username: string | undefined) => {
+  try {
+    await prisma.task.updateMany({
+      where: {
+        id: taskId,
+        status: {
+          not: "COMPLETED"
+        }
+      },
+      data: {
+        status: "COMPLETED",
+        completeUser: username
+      }
+    })
 
-export default { createTask, assignSensor, findAllTask, deleteTask, findTask }
+    const task = await prisma.task.findFirstOrThrow({
+      where: {
+        id: taskId,
+      },
+      include: {
+        Device: {
+          select: {
+            Device: true
+          }
+        }
+      },
+
+    })
+
+    if (task.status != "COMPLETED") {
+      throw ({ name: 'ValidationError', message: { taskId: ["Complete failed"] } });
+    }
+
+
+    const deviceList = task.Device.map(a => a.Device.id)
+
+    deviceList.forEach(async (a) => {
+      await mqttClient.sendMessage(`CFG.STOP,${taskId}`, `ToSensor/${a}`)
+    })
+
+
+    return task
+  }
+  catch (e: any) {
+    throw ({ name: 'ValidationError', message: JSON.stringify(e) });
+  }
+}
+
+
+export default { createTask, assignSensor, findAllTask, deleteTask, findTask, completeTask }

@@ -3,11 +3,6 @@ import mqtt from 'mqtt';
 class MqttHandler {
     mqttClient: any;
     constructor() {
-        this.mqttClient = null;
-    }
-
- connect() {
-        // Connect mqtt with credentials (in case of needed, otherwise we can omit 2nd param)
         this.mqttClient = mqtt.connect("mqtt://localhost");
 
         // Mqtt error calback
@@ -21,22 +16,19 @@ class MqttHandler {
             console.log(`mqtt client connected`);
         });
 
-        // mqtt subscriptions
-        this.mqttClient.subscribe('mytopic', { qos: 0 });
-
-        // When a message arrives, console.log it
-        this.mqttClient.on('message', function (topic: string, message: string) {
-            console.log(message.toString());
-        });
-
         this.mqttClient.on('close', () => {
             console.log(`mqtt client disconnected`);
         });
     }
 
     // Sends a mqtt message to topic: mytopic
-    async sendMessage(message: string ,topic : string) {
-        await this.mqttClient.publish(topic, message);
+    async sendMessage(message: string, topic: string) {
+        return new Promise((resolve, reject) => {
+            this.mqttClient.publish(topic, message, { qos: 2, retain: true }, (err: any, result: any) => {
+                if (err) reject(err)
+                else resolve(result)
+            })
+        })
     }
 
     async close() {

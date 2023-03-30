@@ -15,11 +15,14 @@ async function main() {
     }
 
     try {
-        const newDevice = await prisma.device.create({
-            data: {
+        const newDevice = await prisma.device.createMany({
+            data: [{
                 id: "AAAAAA",
                 name: "AAAAAA"
-            }
+            },{
+                id: "BBBBBB",
+                name: "BBBBBB"
+            }]
         })
         console.log(newDevice)
 
