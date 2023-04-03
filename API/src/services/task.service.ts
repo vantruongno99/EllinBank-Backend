@@ -31,6 +31,7 @@ const createTask = async (task: TaskInput, user: string | undefined) => {
       data: {
         ...task,
         createUser: user,
+        createdUTC: (new Date()).toISOString()
       }
     })
     return newTask
@@ -118,23 +119,31 @@ const findTask = async (taskId: number) => {
     return task
   }
   catch (e: any) {
-    throw ({ name: 'ValidationError', message: JSON.stringify(e) });
+    throw ({ name: 'ValidationError', message: "Not Found" });
 
   }
 }
 
 const completeTask = async (taskId: number, username: string | undefined) => {
   try {
-    await prisma.task.updateMany({
+
+     await prisma.task.findFirstOrThrow({
       where: {
         id: taskId,
         status: {
           not: "COMPLETED"
         }
+      }
+    })
+
+    await prisma.task.update({
+      where: {
+        id: taskId
       },
       data: {
         status: "COMPLETED",
-        completeUser: username
+        completeUser: username,
+        completedUTC: new Date()
       }
     })
 
@@ -167,7 +176,7 @@ const completeTask = async (taskId: number, username: string | undefined) => {
     return task
   }
   catch (e: any) {
-    throw ({ name: 'ValidationError', message: JSON.stringify(e) });
+    throw ({ name: 'ValidationError', message: "Not Found or Already Completed" });
   }
 }
 

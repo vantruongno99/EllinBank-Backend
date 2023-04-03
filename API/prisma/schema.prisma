@@ -22,10 +22,10 @@ model Device {
   id        String        @unique @id
   name      String        @unique
   updateUTC DateTime?     @updatedAt
-  CH4_SN    String?
-  O2_SN     String?
-  CO2_SN    String?
-  PUMP_SN   String?
+  CH4_SN    String?       
+  O2_SN     String?        
+  CO2_SN    String?        
+  PUMP_SN   String?        
   Task      Device_Task[]
   Log       Log[]
 }
@@ -47,8 +47,8 @@ model Task {
   id           Int           @id @default(autoincrement())
   startTime    DateTime
   endTime      DateTime
-  createdUTC   Int?
-  completedUTC Int? 
+  createdUTC   DateTime
+  completedUTC DateTime? 
   name         String        @unique
   logPeriod    Int
   Log          Log[]

@@ -34,6 +34,7 @@ async function main() {
     try {
         const newTask = await prisma.task.create({
             data: {
+                createdUTC : new Date(),
                 name: "test",
                 startTime: new Date(),
                 endTime: new Date(new Date().setDate((new Date()).getDate() + 1)),
