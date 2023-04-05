@@ -1,4 +1,5 @@
 import { Request, Response, Router } from 'express';
+import { CalibrateSensorInput, SensorType ,SensorTypes } from '../models/device.modal';
 import deviceService from '../services/device.service';
 import middleware from "../utils/middleware"
 
@@ -40,6 +41,32 @@ deviceRouter.delete('/:deviceId', async (req: Request, res: Response) => {
     const deviceId = req.params.deviceId
     const deleteDevice = await deviceService.deleteDevice(deviceId)
     res.status(200).json(deleteDevice)
+})
+
+deviceRouter.post('/:deviceId/calibrate', async (req: Request, res: Response) => {
+    const deviceId: string = req.params.deviceId
+    const input = req.body
+    const result = await deviceService.calibrateSensor(deviceId, input)
+    res.status(200).json(result)
+})
+
+deviceRouter.get('/:deviceId/:sensorType', async (req: Request, res: Response) => {
+    const deviceId: string = req.params.deviceId
+    const sensorType: string = req.params.sensorType
+
+    const isSensortype = (a: unknown): a is SensorType => {
+        return typeof a === "string" && SensorTypes.includes(a);
+    }
+
+    if (isSensortype(sensorType)) {
+        const result = await deviceService.readSensor(deviceId, sensorType)
+       return res.status(200).json(result)
+    }
+
+    return res.status(400).json({
+        error: "Invalid Sensor Type"
+    })
+
 })
 
 

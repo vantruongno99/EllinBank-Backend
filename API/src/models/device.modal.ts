@@ -20,3 +20,21 @@ export interface Device {
     CO2_SN: string 
     PUMP_SN: string 
   }
+
+  export interface CalibrateSensorInput {
+    gasType : GasType,
+    calType : CAlType,
+    calValue : number
+  }
+
+  export const SensorTypes = ['CO2','CH4', 'O2', 'TEMP', 'RH', 'BAR']  
+
+  export type SensorType = typeof SensorTypes[number]
+
+  export const GasTypes = ['CO2', 'CH4']
+
+  export type GasType = typeof GasTypes[number]
+
+  export const CalTypes = ['ZERO', 'SPAN']
+
+  export type CAlType = typeof GasTypes[number]

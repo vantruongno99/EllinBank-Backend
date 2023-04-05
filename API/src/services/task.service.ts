@@ -127,7 +127,7 @@ const findTask = async (taskId: number) => {
 const completeTask = async (taskId: number, username: string | undefined) => {
   try {
 
-     await prisma.task.findFirstOrThrow({
+    await prisma.task.findFirstOrThrow({
       where: {
         id: taskId,
         status: {
@@ -169,7 +169,7 @@ const completeTask = async (taskId: number, username: string | undefined) => {
     const deviceList = task.Device.map(a => a.Device.id)
 
     deviceList.forEach(async (a) => {
-      await mqttClient.sendMessage(`CFG.STOP,${taskId}`, `ToSensor/${a}`)
+      await mqttClient.sendMessage(`CFG,STOP,${taskId}`, `ToSensor/${a}`)
     })
 
 
@@ -180,5 +180,121 @@ const completeTask = async (taskId: number, username: string | undefined) => {
   }
 }
 
+const pasueTask = async (taskId: number, username: string | undefined) => {
+  try {
 
-export default { createTask, assignSensor, findAllTask, deleteTask, findTask, completeTask }
+    await prisma.task.findFirstOrThrow({
+      where: {
+        id: taskId,
+        status: {
+          equals: "STARTED"
+        }
+      }
+    })
+
+    await prisma.task.update({
+      where: {
+        id: taskId
+      },
+      data: {
+        status: "PAUSED"
+      }
+    })
+
+    const task = await prisma.task.findFirstOrThrow({
+      where: {
+        id: taskId,
+      },
+      include: {
+        Device: {
+          select: {
+            Device: true
+          }
+        }
+      },
+
+    })
+
+    if (task.status != "PAUSED") {
+      throw ({ name: 'ValidationError', message: { taskId: ["PAUSED failed"] } });
+    }
+
+
+    const deviceList = task.Device.map(a => a.Device.id)
+
+    deviceList.forEach(async (a) => {
+      await mqttClient.sendMessage(`CFG,PAUSE,${taskId}`, `ToSensor/${a}`)
+    })
+
+
+    return task
+  }
+  catch (e: any) {
+    throw ({ name: 'ValidationError', message: "Not Found or Already Paused" });
+  }
+}
+
+const resumeTask = async (taskId: number, username: string | undefined) => {
+  try {
+
+    await prisma.task.findFirstOrThrow({
+      where: {
+        id: taskId,
+        status: {
+          equals: "PAUSED"
+        }
+      }
+    })
+
+    await prisma.task.update({
+      where: {
+        id: taskId
+      },
+      data: {
+        status: "STARTED"
+      }
+    })
+
+    const task = await prisma.task.findFirstOrThrow({
+      where: {
+        id: taskId,
+      },
+      include: {
+        Device: {
+          select: {
+            Device: true
+          }
+        }
+      },
+
+    })
+
+    if (task.status != "STARTED") {
+      throw ({ name: 'ValidationError', message: { taskId: ["RESUME failed"] } });
+    }
+
+
+    const deviceList = task.Device.map(a => a.Device.id)
+
+    deviceList.forEach(async (a) => {
+      await mqttClient.sendMessage(`CFG,RESUME,${taskId}`, `ToSensor/${a}`)
+    })
+
+    return task
+  }
+  catch (e: any) {
+    throw ({ name: 'ValidationError', message: "Not Found or Already RUNNING" });
+  }
+}
+
+
+export default {
+  createTask,
+  assignSensor,
+  findAllTask,
+  deleteTask,
+  findTask,
+  completeTask,
+  pasueTask,
+  resumeTask
+}

@@ -39,6 +39,20 @@ taskRouter.put('/complete/:taskId', async (req: Request, res: Response) => {
     res.status(200).json(sensors)
 })
 
+taskRouter.put('/pause/:taskId', async (req: Request, res: Response) => {
+    const username = req.user?.username
+    const taskId = parseInt(req.params.taskId)
+    const sensors = await taskService.pasueTask(taskId,username)
+    res.status(200).json(sensors)
+})
+
+taskRouter.put('/resume/:taskId', async (req: Request, res: Response) => {
+    const username = req.user?.username
+    const taskId = parseInt(req.params.taskId)
+    const sensors = await taskService.resumeTask(taskId,username)
+    res.status(200).json(sensors)
+})
+
 
 
 taskRouter.delete('/:taskId', async (req: Request, res: Response) => {

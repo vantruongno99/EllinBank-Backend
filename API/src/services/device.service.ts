@@ -1,6 +1,7 @@
-import { DeviceInput, EditDeviceInput } from "../models/device.modal"
+import { CalibrateSensorInput, DeviceInput, EditDeviceInput, SensorType } from "../models/device.modal"
 import { prisma } from "../../prisma/prismaClient"
 import mqttClient from "../mqtt/mqttClient"
+import { Session } from "inspector"
 
 
 
@@ -107,7 +108,7 @@ const findDevice = async (deviceId: string) => {
 
     })
 
-    
+
 
     return sensor
   }
@@ -118,15 +119,13 @@ const findDevice = async (deviceId: string) => {
 }
 
 const findAvaibleDevice = async () => {
-
-
   const sensors = await prisma.device.findMany({
     where: {
       Task: {
         none: {
           Task: {
-            status:{
-              not  : "COMPLETED"
+            status: {
+              not: "COMPLETED"
             },
           }
         }
@@ -138,11 +137,55 @@ const findAvaibleDevice = async () => {
   return sensors;
 }
 
+const calibrateSensor = async (deviceId: string, input: CalibrateSensorInput) => {
+  const device = await prisma.device.findUniqueOrThrow({
+    where: {
+      id: deviceId,
+    },
+    include: {
+      Task: {
+        select: {
+          Task: true
+        }
+      }
+    },
+
+  })
+
+  if (!device.Task.every(a => a.Task.status !== "STARTED")) {
+    throw ({ name: 'ValidationError', message: "Device still has running tasks" });
+  }
+  await mqttClient.sendMessage(`CAL,${input.gasType}, ${input.calType}, ${input.calValue}`, `ToSensor/${deviceId}`)
+}
+
+const readSensor = async (deviceId: string ,input: SensorType) => {
+  const device = await prisma.device.findUniqueOrThrow({
+    where: {
+      id: deviceId,
+    },
+    include: {
+      Task: {
+        select: {
+          Task: true
+        }
+      }
+    },
+
+  })
+
+  if (!device.Task.every(a => a.Task.status !== "STARTED")) {
+    throw ({ name: 'ValidationError', message: "Device still has running tasks" });
+  }
+  await mqttClient.sendMessage(`READ,${input}`, `ToSensor/${deviceId}`)
+}
+
 export default {
   createDevice,
   findAllDevice,
   deleteDevice,
   findDevice,
   editDevice,
-  findAvaibleDevice
+  findAvaibleDevice,
+  calibrateSensor,
+  readSensor
 }
