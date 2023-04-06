@@ -63,16 +63,7 @@ const editDevice = async (deviceId: string, device: EditDeviceInput) => {
 }
 
 const findAllDevice = async () => {
-  const sensors = await prisma.device.findMany({
-    include: {
-      Task: {
-        select: {
-          Task: true
-        }
-      }
-    },
-  })
-
+  const sensors = await prisma.device.findMany({})
   return sensors;
 }
 

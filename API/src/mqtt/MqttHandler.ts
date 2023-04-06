@@ -3,7 +3,7 @@ import mqtt from 'mqtt';
 class MqttHandler {
     mqttClient: any;
     constructor() {
-        this.mqttClient = mqtt.connect("mqtt://localhost");
+        this.mqttClient = mqtt.connect("mqtt://test.mosquitto.org");
 
         // Mqtt error calback
         this.mqttClient.on('error', (err: any) => {

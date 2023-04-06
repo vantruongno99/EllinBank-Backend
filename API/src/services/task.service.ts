@@ -1,4 +1,4 @@
-import { TaskInput } from "../models/task.model"
+import { TaskEditInput, TaskInput } from "../models/task.model"
 import { prisma } from "../../prisma/prismaClient"
 import mqttClient from "../mqtt/mqttClient"
 
@@ -78,6 +78,32 @@ const assignSensor = async (taskId: number, deviceId: string) => {
     if (e.meta.target) {
       throw ({ name: 'ValidationError', message: `${e.meta.target} is not unique` });
     }
+  }
+}
+
+const updateTask = async (taskId: string, input: TaskEditInput) => {
+
+  const id = parseInt(taskId)
+
+  if (!id) {
+    throw ({ name: 'ValidationError', message: { taskId: ["Invalid"] } });
+
+  }
+
+  try {
+    const updatedTask = await prisma.task.update({
+      where: {
+        id: id
+      },
+      data: {
+        ...input
+      },
+    })
+
+    return updatedTask
+  }
+  catch (e: any) {
+    throw ({ name: 'ValidationError', message: JSON.stringify(e) });
   }
 }
 
@@ -296,5 +322,6 @@ export default {
   findTask,
   completeTask,
   pasueTask,
-  resumeTask
+  resumeTask,
+  updateTask
 }

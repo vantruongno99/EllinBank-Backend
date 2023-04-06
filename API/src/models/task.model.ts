@@ -6,3 +6,10 @@ export interface TaskInput {
     status? : string
 }
 
+export interface TaskEditInput {
+    startTime: Date
+    id: number,
+    name : string,
+    logPeriod : number,
+}
+
