@@ -1,8 +1,6 @@
 import { CalibrateSensorInput, DeviceInput, EditDeviceInput, SensorType } from "../models/device.modal"
 import { prisma } from "../../prisma/prismaClient"
-import mqttClient from "../mqtt/mqttClient"
-import { Session } from "inspector"
-
+import mqttService from "./mqtt.service"
 
 
 const createDevice = async (device: DeviceInput) => {
@@ -69,13 +67,32 @@ const findAllDevice = async () => {
 
 const deleteDevice = async (deviceId: string) => {
   try {
-    const deleteDevice = await prisma.device.delete({
+    const tasks = await prisma.task.findMany({
+      where: {
+        Device: {
+          some: {
+            Device: {
+              id: deviceId
+            }
+          }
+        },
+        status: {
+          not: "COMPLETED"
+        }
+      },
+    })
+
+    tasks.forEach(async (task) => {
+      await mqttService.stopDevice(deviceId,task.id)
+    })
+
+
+    await prisma.device.delete({
       where: {
         id: deviceId,
       },
     })
-
-    return deleteDevice
+    
   }
   catch (e: any) {
     throw ({ name: 'ValidationError', message: JSON.stringify(e) });
@@ -146,10 +163,10 @@ const calibrateSensor = async (deviceId: string, input: CalibrateSensorInput) =>
   if (!device.Task.every(a => a.Task.status !== "STARTED")) {
     throw ({ name: 'ValidationError', message: "Device still has running tasks" });
   }
-  await mqttClient.sendMessage(`CAL,${input.gasType}, ${input.calType}, ${input.calValue}`, `ToSensor/${deviceId}`)
+  await mqttService.calibrate(deviceId,input)
 }
 
-const readSensor = async (deviceId: string ,input: SensorType) => {
+const readSensor = async (deviceId: string, sensorType: SensorType) => {
   const device = await prisma.device.findUniqueOrThrow({
     where: {
       id: deviceId,
@@ -167,8 +184,12 @@ const readSensor = async (deviceId: string ,input: SensorType) => {
   if (!device.Task.every(a => a.Task.status !== "STARTED")) {
     throw ({ name: 'ValidationError', message: "Device still has running tasks" });
   }
-  await mqttClient.sendMessage(`READ,${input}`, `ToSensor/${deviceId}`)
+  await mqttService.read(deviceId,sensorType)
 }
+
+
+
+
 
 export default {
   createDevice,

@@ -1,6 +1,8 @@
 import { TaskEditInput, TaskInput } from "../models/task.model"
 import { prisma } from "../../prisma/prismaClient"
-import mqttClient from "../mqtt/mqttClient"
+import { ConfigSend } from "../models/mqtt.modals";
+import mqttService from "./mqtt.service";
+
 
 const createTask = async (task: TaskInput, user: string | undefined) => {
   const name = task.name.trim()
@@ -67,11 +69,45 @@ const assignSensor = async (taskId: number, deviceId: string) => {
       }
     })
 
-    console.log(deviceId)
+    const config : ConfigSend = {
+      taskId: taskId,
+      msgTimeUTC: Math.floor(Date.now() / 1000),
+      startTimeUTC: Math.floor(new Date(task.startTime).getTime() / 1000),
+      endTimeUTC : Math.floor(new Date(task.endTime).getTime() / 1000),
+      logPeriod: task.logPeriod,
+    }
 
-    mqttClient.sendMessage(`CFG,REQ,${taskId},${Math.floor(Date.now() / 1000)},${Math.floor(new Date(task.startTime).getTime() / 1000)},${Math.floor(new Date(task.endTime).getTime() / 1000)},${task.logPeriod}`, `ToSensor/${deviceId}`);
+    mqttService.sendConfigure(deviceId,config);
     return deviceTask
 
+
+  }
+  catch (e: any) {
+    if (e.meta.target) {
+      throw ({ name: 'ValidationError', message: `${e.meta.target} is not unique` });
+    }
+  }
+}
+
+const unassignSensor = async (taskId: number, deviceId: string) => {
+  if (!taskId) {
+    throw ({ name: 'ValidationError', message: { taskId: ["can't be blank"] } });
+  }
+
+  if (!deviceId) {
+    throw ({ name: 'ValidationError', message: { deviceId: ["can't be blank"] } });
+  }
+
+  try {
+    await prisma.device_Task.delete({
+      where: {
+        taskId_deviceId: {
+          taskId,
+          deviceId
+        }
+      }
+    })
+    mqttService.stopTask(deviceId,taskId);
 
   }
   catch (e: any) {
@@ -98,9 +134,31 @@ const updateTask = async (taskId: string, input: TaskEditInput) => {
       data: {
         ...input
       },
+      include: {
+        Device: {
+          select: {
+            Device: true
+          }
+        }
+      },
     })
+    const { Device, ...newTaskDetail } = updatedTask
 
-    return updatedTask
+    const deviceList = updatedTask.Device.map(a => a.Device.id)
+
+    const config : ConfigSend = {
+      taskId: updatedTask.id,
+      msgTimeUTC: Math.floor(Date.now() / 1000),
+      startTimeUTC: Math.floor(new Date(updatedTask.startTime).getTime() / 1000),
+      endTimeUTC : Math.floor(new Date(updatedTask.endTime).getTime() / 1000),
+      logPeriod: updatedTask.logPeriod,
+    }
+
+    for (const deviceId of deviceList) {
+      await mqttService.sendConfigure(deviceId,config)
+    }
+
+    return newTaskDetail
   }
   catch (e: any) {
     throw ({ name: 'ValidationError', message: JSON.stringify(e) });
@@ -114,6 +172,30 @@ const findAllTask = async () => {
 
 const deleteTask = async (taskId: number) => {
   try {
+
+    const task = await prisma.task.findFirstOrThrow({
+      where: {
+        id: taskId,
+      },
+      include: {
+        Device: {
+          select: {
+            Device: true
+          }
+        }
+      },
+
+    })
+
+    if (task.status !== "COMPLETED") {
+
+      const deviceList = task.Device.map(a => a.Device.id)
+
+      deviceList.forEach(async (deviceId) => {
+        await mqttService.stopTask(deviceId,taskId)
+      })
+    }
+
     const deleteTask = await prisma.task.delete({
       where: {
         id: taskId,
@@ -194,8 +276,8 @@ const completeTask = async (taskId: number, username: string | undefined) => {
 
     const deviceList = task.Device.map(a => a.Device.id)
 
-    deviceList.forEach(async (a) => {
-      await mqttClient.sendMessage(`CFG,STOP,${taskId}`, `ToSensor/${a}`)
+    deviceList.forEach(async (deviceId) => {
+      await mqttService.stopTask(deviceId, taskId)
     })
 
 
@@ -248,8 +330,8 @@ const pasueTask = async (taskId: number, username: string | undefined) => {
 
     const deviceList = task.Device.map(a => a.Device.id)
 
-    deviceList.forEach(async (a) => {
-      await mqttClient.sendMessage(`CFG,PAUSE,${taskId}`, `ToSensor/${a}`)
+    deviceList.forEach(async (deviceId) => {
+      await mqttService.pauseTask(deviceId, taskId)
     })
 
 
@@ -302,8 +384,8 @@ const resumeTask = async (taskId: number, username: string | undefined) => {
 
     const deviceList = task.Device.map(a => a.Device.id)
 
-    deviceList.forEach(async (a) => {
-      await mqttClient.sendMessage(`CFG,RESUME,${taskId}`, `ToSensor/${a}`)
+    deviceList.forEach(async (deviceId) => {
+      await mqttService.resumeTask(deviceId, taskId)
     })
 
     return task
@@ -323,5 +405,6 @@ export default {
   completeTask,
   pasueTask,
   resumeTask,
-  updateTask
+  updateTask,
+  unassignSensor
 }
