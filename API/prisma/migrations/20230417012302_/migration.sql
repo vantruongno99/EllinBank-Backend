@@ -48,7 +48,7 @@ CREATE TABLE `Task` (
     `completedUTC` DATETIME(3) NULL,
     `name` VARCHAR(191) NOT NULL,
     `logPeriod` INTEGER NOT NULL,
-    `status` VARCHAR(191) NOT NULL DEFAULT 'STARTED',
+    `status` VARCHAR(191) NOT NULL DEFAULT 'ONGOING',
     `createUser` VARCHAR(191) NOT NULL,
     `completeUser` VARCHAR(191) NULL,
 

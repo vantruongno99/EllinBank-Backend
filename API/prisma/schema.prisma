@@ -52,7 +52,7 @@ model Task {
   name         String        @unique
   logPeriod    Int
   Log          Log[]
-  status       String      @default("STARTED")
+  status       String      @default("ONGOING")
   Device       Device_Task[]
   createUser   String
   completeUser String?

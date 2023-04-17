@@ -295,7 +295,7 @@ const pasueTask = async (taskId: number, username: string | undefined) => {
       where: {
         id: taskId,
         status: {
-          equals: "STARTED"
+          equals: "ONGOING"
         }
       }
     })
@@ -359,7 +359,7 @@ const resumeTask = async (taskId: number, username: string | undefined) => {
         id: taskId
       },
       data: {
-        status: "STARTED"
+        status: "ONGOING"
       }
     })
 
@@ -377,7 +377,7 @@ const resumeTask = async (taskId: number, username: string | undefined) => {
 
     })
 
-    if (task.status != "STARTED") {
+    if (task.status != "ONGOING") {
       throw ({ name: 'ValidationError', message: { taskId: ["RESUME failed"] } });
     }
 

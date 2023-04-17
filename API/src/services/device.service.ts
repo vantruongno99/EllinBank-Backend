@@ -160,7 +160,7 @@ const calibrateSensor = async (deviceId: string, input: CalibrateSensorInput) =>
 
   })
 
-  if (!device.Task.every(a => a.Task.status !== "STARTED")) {
+  if (!device.Task.every(a => a.Task.status !== "ONGOING")) {
     throw ({ name: 'ValidationError', message: "Device still has running tasks" });
   }
   await mqttService.calibrate(deviceId,input)
@@ -181,7 +181,7 @@ const readSensor = async (deviceId: string, sensorType: SensorType) => {
 
   })
 
-  if (!device.Task.every(a => a.Task.status !== "STARTED")) {
+  if (!device.Task.every(a => a.Task.status !== "ONGOING")) {
     throw ({ name: 'ValidationError', message: "Device still has running tasks" });
   }
   await mqttService.read(deviceId,sensorType)
