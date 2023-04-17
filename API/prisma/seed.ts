@@ -15,6 +15,18 @@ async function main() {
     }
 
     try {
+        const user = await userService.createUser({
+            username: "super",
+            email: "super@gmail.com",
+            password: "12345678"
+        });
+        console.log(user)
+    }
+    catch (e: any) {
+        console.log(e)
+    }
+
+    try {
         const newDevice = await prisma.device.createMany({
             data: [{
                 id: "AAAAAA",
@@ -39,7 +51,7 @@ async function main() {
                 startTime: new Date(),
                 endTime: new Date(new Date().setDate((new Date()).getDate() + 1)),
                 createUser: "test",
-                logPeriod: 10
+                logPeriod: 1
             }
         })
         console.group(newTask)
