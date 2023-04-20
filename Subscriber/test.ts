@@ -2,10 +2,17 @@ import mqttClient from "./mqtt/mqttClient";
 
 const c = async () => {
 
+    try {
 
-    let [someResult, anotherResult] = await Promise.all([mqttClient.expectMessage('222222222', '222222222'), await mqttClient.sendMessage('222222222', '222222222')]);
 
-    console.log(someResult)
+        let [someResult, anotherResult] = await Promise.all([mqttClient.expectMessage('222222222'), await mqttClient.sendMessage('2222222222', '2222222223')]);
+
+        console.log(someResult)
+    }
+
+    catch (err) {
+        console.log("failed")
+    }
 
 
 }
@@ -13,7 +20,7 @@ const c = async () => {
 const d = async () => {
 
 
-    let [someResult, anotherResult] = await Promise.all([mqttClient.expectMessage('1111111111', '11111111111'), await mqttClient.sendMessage('1111111111', '11111111111')]);
+    let [someResult, anotherResult] = await Promise.all([mqttClient.expectMessage('11111111111'), await mqttClient.sendMessage('11111111111', '11111111111')]);
 
     console.log(someResult)
 
@@ -29,4 +36,3 @@ const b = async () => {
 setTimeout(async () => b(), 5000)
 
 
-setTimeout(async () => await mqttClient.expectMessage('222222222', '222222222'), 10000)

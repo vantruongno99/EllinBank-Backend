@@ -191,6 +191,7 @@ const readSensor = async (deviceId: string, sensorType: SensorType) => {
 
 
 
+
 export default {
   createDevice,
   findAllDevice,

@@ -27,20 +27,17 @@ model Device {
   CO2_SN    String?        
   PUMP_SN   String?        
   Task      Device_Task[]
-  Log       Log[]
 }
 
 model Log {
   id           Int      @id @default(autoincrement())
   dateTimeUTC  DateTime
   timestampUTC Int
-  deviceId     String?
-  taskId       Int?
+  deviceId     String
+  taskId       Int
   logType      String
   logValue     Float
   logNote      String
-  Device       Device?  @relation(fields: [deviceId], references: [id])
-  Task         Task?    @relation(fields: [taskId], references: [id])
 }
 
 model Task {
@@ -51,7 +48,6 @@ model Task {
   completedUTC DateTime? 
   name         String        @unique
   logPeriod    Int
-  Log          Log[]
   status       String      @default("ONGOING")
   Device       Device_Task[]
   createUser   String

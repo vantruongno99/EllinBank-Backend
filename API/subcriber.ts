@@ -1,20 +1,33 @@
 import { PrismaClient } from '@prisma/client'
 import mqtt from 'mqtt'
-import { Log } from './types'
+
 
 const prisma = new PrismaClient()
 var client = mqtt.connect("mqtt://localhost")
 
+export type Log = {
+    taskId: number,
+    timestampUTC: number,
+    logType: string,
+    logValue: number,
+    logNote: string,
+    dateTimeUTC: Date,
+    deviceId: string
+}
 
 
 async function main(data: any, topic: string) {
+    const type = typeofMessage(data)
+    switch(type){
+        case "LOG": console.log("loh")
+    }
     const test:Log = logMessageHandle(data, topic)
     if (test.taskId) {
-         const qwe =  await prisma.log.create({
+         const res =  await prisma.log.create({
             data: test
-        })
-        console.log(qwe)
-          
+        })          
+
+        console.log(res)
     }
 }
 

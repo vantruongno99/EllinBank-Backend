@@ -395,6 +395,22 @@ const resumeTask = async (taskId: number, username: string | undefined) => {
   }
 }
 
+const getLogs =  async (taskId: number) =>{
+  try{
+
+    const logs = await prisma.log.findMany({
+      where :{
+        taskId : taskId
+      }
+    })
+    return logs
+  }
+
+  catch (e: any) {
+    throw ({ name: 'ValidationError', message: JSON.stringify(e) });
+  }
+} 
+
 
 export default {
   createTask,
@@ -406,5 +422,6 @@ export default {
   pasueTask,
   resumeTask,
   updateTask,
-  unassignSensor
+  unassignSensor,
+  getLogs
 }

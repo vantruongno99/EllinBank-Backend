@@ -39,6 +39,12 @@ taskRouter.get('/:taskId', async (req: Request, res: Response) => {
     res.status(200).json(sensors)
 })
 
+taskRouter.get('/:taskId/logs', async (req: Request, res: Response) => {
+    const taskId = parseInt(req.params.taskId)
+    const sensors = await taskService.getLogs(taskId)
+    res.status(200).json(sensors)
+})
+
 taskRouter.get('/', async (req: Request, res: Response) => {
     const sensors = await taskService.findAllTask()
     res.status(200).json(sensors)
