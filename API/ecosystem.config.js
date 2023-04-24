@@ -2,9 +2,12 @@ module.exports = {
   apps : [{
     name   : "API",
     script : "./dist/index.js",
-    instances : 4,
+    instances : 2,
     exec_mode : "cluster",
-    watch : true
+    watch : true,
+    env: {
+      NODE_ENV: "production"
+    },
   },
   {
     name: "SUB",

@@ -71,18 +71,6 @@ const checkMessageHandle = (message: String, topic: String) => {
     })
 }
 
-const CalMessageHandle = (message: String, topic: String) => {
-    const value: string[] = message.split(',')
-    return ({
-        Status: parseInt(value[1]),
-        timestampUTC: parseInt(value[2]),
-        gasType: value[3],
-        calType: value[4],
-        setValue: value[5],
-        measVal: value[6],
-        deviceId: topic
-    })
-}
 
 client.on("connect", function () {
     console.log("connected");

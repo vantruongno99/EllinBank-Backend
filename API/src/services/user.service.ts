@@ -53,6 +53,7 @@ const findUserByUsername = async (username: string) : Promise<any> => {
     select: {
       username: true,
       id: true,
+      email : true
     },
   });
 
@@ -61,5 +62,8 @@ const findUserByUsername = async (username: string) : Promise<any> => {
   }
   return user;
 }
+
+
+
 
 export default { createUser, findAllUser, findUserByUsername }

@@ -8,3 +8,8 @@ export interface LoginInput {
     username : string;
     password :string;
 }
+
+
+export interface PasswordChangeInput extends LoginInput{
+    newPassword : string
+}
