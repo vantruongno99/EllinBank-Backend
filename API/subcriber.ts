@@ -1,9 +1,10 @@
 import { PrismaClient } from '@prisma/client'
 import mqtt from 'mqtt'
+import config from './src/utils/config'
 
 
 const prisma = new PrismaClient()
-var client = mqtt.connect("mqtt://localhost")
+var client = mqtt.connect(config.MQTT)
 
 export type Log = {
     taskId: number,
@@ -18,14 +19,20 @@ export type Log = {
 
 async function main(data: any, topic: string) {
     const type = typeofMessage(data)
-    switch(type){
-        case "LOG": console.log("loh")
+    switch (type) {
+        case "LOG": {
+            const test: Log =  logMessageHandle(data, topic)
+            await addLog(test)
+        }
     }
-    const test:Log = logMessageHandle(data, topic)
-    if (test.taskId) {
-         const res =  await prisma.log.create({
-            data: test
-        })          
+
+}
+
+const addLog = async (log: Log) => {
+    if (log.taskId) {
+        const res = await prisma.log.create({
+            data: log
+        })
 
         console.log(res)
     }
@@ -34,6 +41,8 @@ async function main(data: any, topic: string) {
 function messsageReceived(topic: string, message: any, packet: string) {
     try {
         const data = message.toString();
+        console.log(data)
+        console.log(topic)
         main(data, topic)
     }
     catch (err: any) {
@@ -43,9 +52,6 @@ function messsageReceived(topic: string, message: any, packet: string) {
 
 const typeofMessage = (message: String) => {
     const type = message.split(',')[0]
-    if (type !== "CFG") {
-        return `${message.split(',')[0]},${message.split(',')[1]}`
-    }
     return type
 }
 
@@ -79,16 +85,18 @@ client.on("connect", function () {
 client.on('message', messsageReceived);
 
 
-client.subscribe('#');
+client.subscribe('ToServer/#');
+
 
 setInterval(() => {
-    const obj = "LOG,1,1000000,test,10,"
-    publish('ToSensor/AAAAAA', obj);
+    const d = new Date();
+    let time = d.getTime()/1000;
+    const obj = `LOG,1,${time},test,${Math.floor(Math.random() * 10000)},`
+    publish('ToServer/AAAAAA', obj);
 }, 500);
 
 //publish function
 const publish = (topic: string, msg: string) => {
-    console.log("publishing", msg);
     if (client.connected == true) {
         client.publish(topic, msg);
     }

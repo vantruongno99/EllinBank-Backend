@@ -30,8 +30,8 @@ CREATE TABLE `Log` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `dateTimeUTC` DATETIME(3) NOT NULL,
     `timestampUTC` INTEGER NOT NULL,
-    `deviceId` VARCHAR(191) NULL,
-    `taskId` INTEGER NULL,
+    `deviceId` VARCHAR(191) NOT NULL,
+    `taskId` INTEGER NOT NULL,
     `logType` VARCHAR(191) NOT NULL,
     `logValue` DOUBLE NOT NULL,
     `logNote` VARCHAR(191) NOT NULL,
@@ -75,12 +75,6 @@ CREATE TABLE `Applog` (
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- AddForeignKey
-ALTER TABLE `Log` ADD CONSTRAINT `Log_deviceId_fkey` FOREIGN KEY (`deviceId`) REFERENCES `Device`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `Log` ADD CONSTRAINT `Log_taskId_fkey` FOREIGN KEY (`taskId`) REFERENCES `Task`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Task` ADD CONSTRAINT `Task_createUser_fkey` FOREIGN KEY (`createUser`) REFERENCES `User`(`username`) ON DELETE RESTRICT ON UPDATE CASCADE;

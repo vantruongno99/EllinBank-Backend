@@ -1,9 +1,9 @@
 import mqtt from 'mqtt';
-
+import config from '../utils/config'
 class MqttHandler {
     mqttClient: any;
     constructor() {
-        this.mqttClient = mqtt.connect("mqtt://localhost");
+        this.mqttClient = mqtt.connect(config.MQTT);
 
         // Mqtt error calback
         this.mqttClient.on('error', (err: any) => {

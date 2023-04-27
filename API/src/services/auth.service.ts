@@ -50,15 +50,15 @@ const changePassword = async (input: PasswordChangeInput) => {
   const newPassword = input.newPassword?.trim()
 
   if (!username) {
-    throw ({ name: 'ValidationError', message: { username: ["can't be blank"] } });
+    throw ({ name: 'ValidationError', message: " username is blank" });
   }
 
   if (!password) {
-    throw ({ name: 'ValidationError', message: { password: ["can't be blank"] } });
+    throw ({ name: 'ValidationError', message: " password is blank" });
   }
 
   if (!newPassword) {
-    throw ({ name: 'ValidationError', message: { newPassword: ["can't be blank"] } });
+    throw ({ name: 'ValidationError', message: " newPassword is blank" });
   }
 
 
@@ -97,13 +97,13 @@ const changePassword = async (input: PasswordChangeInput) => {
     });
   }
 
-    catch (e: any) {
-      if (e.meta.target) {
-        throw ({ name: 'ValidationError', message: `${e.meta.target} is not unique` });
-      }
-
+  catch (e: any) {
+    if (e.meta.target) {
+      throw ({ name: 'ValidationError', message: `${e.meta.target} is not unique` });
     }
+
   }
+}
 
 
 

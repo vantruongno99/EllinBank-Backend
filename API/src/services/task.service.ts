@@ -3,7 +3,6 @@ import { prisma } from "../../prisma/prismaClient"
 import { ConfigSend } from "../models/mqtt.modals";
 import mqttService from "./mqtt.service";
 
-
 const createTask = async (task: TaskInput, user: string | undefined) => {
   const name = task.name.trim()
   const startTime = task.startTime
@@ -69,15 +68,15 @@ const assignSensor = async (taskId: number, deviceId: string) => {
       }
     })
 
-    const config : ConfigSend = {
+    const config: ConfigSend = {
       taskId: taskId,
       msgTimeUTC: Math.floor(Date.now() / 1000),
       startTimeUTC: Math.floor(new Date(task.startTime).getTime() / 1000),
-      endTimeUTC : Math.floor(new Date(task.endTime).getTime() / 1000),
+      endTimeUTC: Math.floor(new Date(task.endTime).getTime() / 1000),
       logPeriod: task.logPeriod,
     }
 
-    mqttService.sendConfigure(deviceId,config);
+    mqttService.sendConfigure(deviceId, config);
     return deviceTask
 
 
@@ -107,7 +106,7 @@ const unassignSensor = async (taskId: number, deviceId: string) => {
         }
       }
     })
-    mqttService.stopTask(deviceId,taskId);
+    mqttService.stopTask(deviceId, taskId);
 
   }
   catch (e: any) {
@@ -146,16 +145,16 @@ const updateTask = async (taskId: string, input: TaskEditInput) => {
 
     const deviceList = updatedTask.Device.map(a => a.Device.id)
 
-    const config : ConfigSend = {
+    const config: ConfigSend = {
       taskId: updatedTask.id,
       msgTimeUTC: Math.floor(Date.now() / 1000),
       startTimeUTC: Math.floor(new Date(updatedTask.startTime).getTime() / 1000),
-      endTimeUTC : Math.floor(new Date(updatedTask.endTime).getTime() / 1000),
+      endTimeUTC: Math.floor(new Date(updatedTask.endTime).getTime() / 1000),
       logPeriod: updatedTask.logPeriod,
     }
 
     for (const deviceId of deviceList) {
-      await mqttService.sendConfigure(deviceId,config)
+      await mqttService.sendConfigure(deviceId, config)
     }
 
     return newTaskDetail
@@ -192,7 +191,7 @@ const deleteTask = async (taskId: number) => {
       const deviceList = task.Device.map(a => a.Device.id)
 
       deviceList.forEach(async (deviceId) => {
-        await mqttService.stopTask(deviceId,taskId)
+        await mqttService.stopTask(deviceId, taskId)
       })
     }
 
@@ -395,12 +394,23 @@ const resumeTask = async (taskId: number, username: string | undefined) => {
   }
 }
 
-const getLogs =  async (taskId: number) =>{
-  try{
+const getLogs = async (taskId: number) => {
+  try {
+
+  const task =  await prisma.task.findFirst({
+      where: {
+        id: taskId
+      }
+    })
+
+    if(!task){
+      throw ({ name: 'ValidationError', message: "Task not found" });
+
+    }
 
     const logs = await prisma.log.findMany({
-      where :{
-        taskId : taskId
+      where: {
+        taskId: taskId
       }
     })
     return logs
@@ -409,7 +419,7 @@ const getLogs =  async (taskId: number) =>{
   catch (e: any) {
     throw ({ name: 'ValidationError', message: JSON.stringify(e) });
   }
-} 
+}
 
 
 export default {
