@@ -30,7 +30,7 @@ taskRouter.post('/unassignSensor', async (req: Request, res: Response) => {
     const taskId = req.body.taskId
     const deviceId = req.body.deviceId
     await taskService.unassignSensor(taskId, deviceId)
-    res.status(200).json()
+    res.status(200).end()
 })
 
 taskRouter.get('/:taskId', async (req: Request, res: Response) => {

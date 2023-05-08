@@ -21,7 +21,7 @@ async function main(data: any, topic: string) {
     const type = typeofMessage(data)
     switch (type) {
         case "LOG": {
-            const test: Log =  logMessageHandle(data, topic)
+            const test: Log = logMessageHandle(data, topic)
             await addLog(test)
         }
     }
@@ -87,19 +87,23 @@ client.on('message', messsageReceived);
 
 client.subscribe('ToServer/#');
 
-
-setInterval(() => {
-    const d = new Date();
-    let time = d.getTime()/1000;
-    const obj = `LOG,1,${time},test,${Math.floor(Math.random() * 10000)},`
-    publish('ToServer/AAAAAA', obj);
-}, 500);
-
-//publish function
 const publish = (topic: string, msg: string) => {
     if (client.connected == true) {
         client.publish(topic, msg);
     }
 }
+
+
+process.env.NODE_ENV !== "production" && 
+    setInterval(() => {
+    const d = new Date();
+    let time = d.getTime() / 1000;
+    const obj = `LOG,2,${time},test,${Math.floor(Math.random() * 10000)},`
+    publish('ToServer/AAAAAA', obj);
+}, 500);
+
+
+
+
 
 

@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express';
-import { CalibrateSensorInput, SensorType ,SensorTypes } from '../models/device.modal';
+import { CalibrateSensorInput, SensorType, SensorTypes } from '../models/device.modal';
 import deviceService from '../services/device.service';
 import middleware from "../utils/middleware"
 
@@ -15,8 +15,18 @@ deviceRouter.post('/', async (req: Request, res: Response) => {
 })
 
 deviceRouter.put('/:deviceId', async (req: Request, res: Response) => {
-    const updateSensor = await deviceService.editDevice(req.params.deviceId, req.body)
-    res.status(200).json(updateSensor)
+    await deviceService.editDevice(req.params.deviceId, req.body)
+    res.status(200).end()
+})
+
+deviceRouter.put('/:deviceId/pause', async (req: Request, res: Response) => {
+    await deviceService.pauseDevice(req.params.deviceId)
+    res.status(200).end()
+})
+
+deviceRouter.put('/:deviceId/resume', async (req: Request, res: Response) => {
+    await deviceService.resumeDevice(req.params.deviceId)
+    res.status(200).end()
 })
 
 deviceRouter.get('/', async (req: Request, res: Response) => {
@@ -60,7 +70,7 @@ deviceRouter.get('/:deviceId/:sensorType', async (req: Request, res: Response) =
 
     if (isSensortype(sensorType)) {
         const result = await deviceService.readSensor(deviceId, sensorType)
-       return res.status(200).json(result)
+        return res.status(200).json(result)
     }
 
     return res.status(400).json({

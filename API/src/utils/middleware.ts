@@ -17,9 +17,14 @@ const errorHandler = ((error: any, req: Request, res: Response, next: NextFuncti
             error: 'invalid token'
         })
     }
-    else if (error.name === 'TokenExpiredError') {
-        return res.status(401).json({
-            error: 'token expired'
+    else if (error.name === 'DuplicationError') {
+        return res.status(400).json({
+            error: error.message
+        })
+    }
+    else if (error.name === 'NotFoundError') {
+        return res.status(404).json({
+            error: error.message
         })
     }
     next(error)

@@ -1,6 +1,7 @@
 import { CalibrateSensorInput, DeviceInput, EditDeviceInput, SensorType } from "../models/device.modal"
 import { prisma } from "../../prisma/prismaClient"
 import mqttService from "./mqtt.service"
+import errorHandler from "../utils/errorHandler"
 
 
 const createDevice = async (device: DeviceInput) => {
@@ -56,7 +57,7 @@ const editDevice = async (deviceId: string, device: EditDeviceInput) => {
     return updateSensor
   }
   catch (e: any) {
-    throw ({ name: 'ValidationError', message: JSON.stringify(e) });
+    errorHandler(e)
   }
 }
 
@@ -82,9 +83,9 @@ const deleteDevice = async (deviceId: string) => {
       },
     })
 
-    tasks.forEach(async (task) => {
-      await mqttService.stopDevice(deviceId,task.id)
-    })
+    for (const task of tasks) {
+      await mqttService.pauseDevice(deviceId, task.id)
+    }
 
 
     await prisma.device.delete({
@@ -92,10 +93,10 @@ const deleteDevice = async (deviceId: string) => {
         id: deviceId,
       },
     })
-    
+
   }
   catch (e: any) {
-    throw ({ name: 'ValidationError', message: JSON.stringify(e) });
+    errorHandler(e)
   }
 }
 
@@ -121,8 +122,7 @@ const findDevice = async (deviceId: string) => {
     return sensor
   }
   catch (e: any) {
-    throw ({ name: 'ValidationError', message: JSON.stringify(e) });
-
+    errorHandler(e)
   }
 }
 
@@ -150,46 +150,138 @@ const calibrateSensor = async (deviceId: string, input: CalibrateSensorInput) =>
     where: {
       id: deviceId,
     },
-    include: {
-      Task: {
-        select: {
-          Task: true
-        }
-      }
-    },
-
   })
 
-  if (!device.Task.every(a => a.Task.status !== "ONGOING")) {
+  if (device.status === "RUNNING") {
     throw ({ name: 'ValidationError', message: "Device still has running tasks" });
   }
-  await mqttService.calibrate(deviceId,input)
+  await mqttService.calibrate(deviceId, input)
 }
 
 const readSensor = async (deviceId: string, sensorType: SensorType) => {
   const device = await prisma.device.findUniqueOrThrow({
     where: {
       id: deviceId,
-    },
-    include: {
-      Task: {
-        select: {
-          Task: true
+    }
+  })
+
+  if (device.status === "RUNNING") {
+    throw ({ name: 'ValidationError', message: "Device still has running tasks" });
+  }
+  await mqttService.read(deviceId, sensorType)
+
+}
+
+const pauseDevice = async (id: string) => {
+  if (!id) {
+    throw ({ name: 'ValidationError', message: { id: ["can't be blank"] } });
+  }
+
+  const device = await prisma.device.findUniqueOrThrow({
+    where: {
+      id: id
+    }
+  })
+
+  const currentTask = await prisma.task.findFirst({
+    where: {
+      Device: {
+        some: {
+          Device: {
+            id: id
+          }
         }
       }
-    },
+    }
 
   })
 
-  if (!device.Task.every(a => a.Task.status !== "ONGOING")) {
-    throw ({ name: 'ValidationError', message: "Device still has running tasks" });
+
+
+  if (!device.status) {
+    throw ({ name: 'ValidationError', message: "Device deoes not have running task" });
   }
-  await mqttService.read(deviceId,sensorType)
+
+  if (device.status === "PAUSED") {
+    throw ({ name: 'ValidationError', message: "Device has already been paused" });
+  }
+
+  try {
+    const data = await prisma.device.update({
+      where: {
+        id: id
+      },
+      data: {
+        status: "PAUSED",
+
+      }
+    })
+
+    currentTask && await mqttService.pauseDevice(id, currentTask.id)
+
+    return data
+
+
+  }
+  catch (e: any) {
+    errorHandler(e)
+  }
 }
 
+const resumeDevice = async (id: string) => {
+  if (!id) {
+    throw ({ name: 'ValidationError', message: { id: ["can't be blank"] } });
+  }
+
+  const device = await prisma.device.findUniqueOrThrow({
+    where: {
+      id: id
+    }
+  })
+
+  const currentTask = await prisma.task.findFirst({
+    where: {
+      Device: {
+        some: {
+          Device: {
+            id: id
+          }
+        }
+      }
+    }
+
+  })
 
 
+  if (!device.status) {
+    throw ({ name: 'ValidationError', message: "Device does not have running task" });
+  }
 
+
+  if (device.status !== "PAUSED") {
+    throw ({ name: 'ValidationError', message: "Device needs to be Paused" });
+  }
+
+
+  try {
+    const data = await prisma.device.update({
+      where: {
+        id: id
+      },
+      data: {
+        status: "RUNNING"
+      }
+    })
+
+    currentTask && await mqttService.resumeDevice(id, currentTask.id)
+
+    return data
+
+  }
+  catch (e: any) {
+    errorHandler(e)
+  }
+}
 
 
 export default {
@@ -200,5 +292,7 @@ export default {
   editDevice,
   findAvaibleDevice,
   calibrateSensor,
-  readSensor
+  readSensor,
+  pauseDevice,
+  resumeDevice
 }

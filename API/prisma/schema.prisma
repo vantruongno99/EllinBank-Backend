@@ -22,6 +22,8 @@ model Device {
   id        String        @unique @id
   name      String        @unique
   updateUTC DateTime?     @updatedAt
+  status    String       @default("READY")
+  assigned  Boolean    @default(false)  
   CH4_SN    String?       
   O2_SN     String?        
   CO2_SN    String?        

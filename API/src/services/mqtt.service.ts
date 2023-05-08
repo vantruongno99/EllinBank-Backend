@@ -36,7 +36,10 @@ const stopTask = async (deviceId: string, taskId: number) => {
     }
 }
 
-const stopDevice = stopTask
+const pauseDevice = stopTask
+
+const resumeDevice = resumeTask
+
 
 const calibrate = async (deviceId : string , config : CalibrateSensorInput) =>{
 
@@ -67,7 +70,8 @@ export default {
     resumeTask,
     pauseTask,
     stopTask,
-    stopDevice,
+    pauseDevice,
     calibrate,
-    read
+    read,
+    resumeDevice
 }

@@ -2,6 +2,8 @@ import { TaskEditInput, TaskInput } from "../models/task.model"
 import { prisma } from "../../prisma/prismaClient"
 import { ConfigSend } from "../models/mqtt.modals";
 import mqttService from "./mqtt.service";
+import errorHandler from "../utils/errorHandler"
+
 
 const createTask = async (task: TaskInput, user: string | undefined) => {
   const name = task.name.trim()
@@ -39,9 +41,7 @@ const createTask = async (task: TaskInput, user: string | undefined) => {
 
   }
   catch (e: any) {
-    if (e.meta.target) {
-      throw ({ name: 'ValidationError', message: `${e.meta.target} is not unique` });
-    }
+    errorHandler(e)
   }
 }
 
@@ -77,14 +77,24 @@ const assignSensor = async (taskId: number, deviceId: string) => {
     }
 
     mqttService.sendConfigure(deviceId, config);
+
+    await prisma.device.update({
+      where: {
+       id : deviceId,
+      },
+      data: {
+        status : "RUNNING",
+        assigned : true
+      },
+    })
+
     return deviceTask
 
 
   }
   catch (e: any) {
-    if (e.meta.target) {
-      throw ({ name: 'ValidationError', message: `${e.meta.target} is not unique` });
-    }
+    errorHandler(e)
+
   }
 }
 
@@ -108,11 +118,20 @@ const unassignSensor = async (taskId: number, deviceId: string) => {
     })
     mqttService.stopTask(deviceId, taskId);
 
+    await prisma.device.update({
+      where: {
+       id : deviceId,
+      },
+      data: {
+        status : "READY",
+        assigned : false
+      },
+    })
+
   }
   catch (e: any) {
-    if (e.meta.target) {
-      throw ({ name: 'ValidationError', message: `${e.meta.target} is not unique` });
-    }
+    errorHandler(e)
+
   }
 }
 
@@ -160,7 +179,7 @@ const updateTask = async (taskId: string, input: TaskEditInput) => {
     return newTaskDetail
   }
   catch (e: any) {
-    throw ({ name: 'ValidationError', message: JSON.stringify(e) });
+    errorHandler(e)
   }
 }
 
@@ -190,10 +209,27 @@ const deleteTask = async (taskId: number) => {
 
       const deviceList = task.Device.map(a => a.Device.id)
 
-      deviceList.forEach(async (deviceId) => {
+
+      for (const deviceId of deviceList) {
         await mqttService.stopTask(deviceId, taskId)
+      }
+
+  
+      await prisma.device.updateMany({
+        where: {
+         id :{
+          in : deviceList
+         },
+        },
+        data: {
+          status : "READY",
+          assigned : false
+        },
       })
+
     }
+
+
 
     const deleteTask = await prisma.task.delete({
       where: {
@@ -204,7 +240,7 @@ const deleteTask = async (taskId: number) => {
     return deleteTask
   }
   catch (e: any) {
-    throw ({ name: 'ValidationError', message: JSON.stringify(e) });
+    errorHandler(e)
   }
 
 }
@@ -226,7 +262,7 @@ const findTask = async (taskId: number) => {
     return task
   }
   catch (e: any) {
-    throw ({ name: 'ValidationError', message: "Not Found" });
+    errorHandler(e)
 
   }
 }
@@ -261,7 +297,8 @@ const completeTask = async (taskId: number, username: string | undefined) => {
       include: {
         Device: {
           select: {
-            Device: true
+            Device: true,
+            
           }
         }
       },
@@ -275,15 +312,30 @@ const completeTask = async (taskId: number, username: string | undefined) => {
 
     const deviceList = task.Device.map(a => a.Device.id)
 
-    deviceList.forEach(async (deviceId) => {
+    for (const deviceId of deviceList) {
       await mqttService.stopTask(deviceId, taskId)
+    }
+
+    
+
+    
+    await prisma.device.updateMany({
+      where: {
+       id :{
+        in : deviceList
+       },
+      },
+      data: {
+        status : "READY",
+        assigned : false
+      },
     })
 
 
     return task
   }
   catch (e: any) {
-    throw ({ name: 'ValidationError', message: "Not Found or Already Completed" });
+    errorHandler(e)
   }
 }
 
@@ -329,15 +381,31 @@ const pasueTask = async (taskId: number, username: string | undefined) => {
 
     const deviceList = task.Device.map(a => a.Device.id)
 
-    deviceList.forEach(async (deviceId) => {
+    for (const deviceId of deviceList) {
       await mqttService.pauseTask(deviceId, taskId)
+    }
+
+    
+
+
+
+    
+    await prisma.device.updateMany({
+      where: {
+       id :{
+        in : deviceList
+       },
+      },
+      data: {
+        status : "PAUSED",
+      },
     })
 
 
     return task
   }
   catch (e: any) {
-    throw ({ name: 'ValidationError', message: "Not Found or Already Paused" });
+    errorHandler(e)
   }
 }
 
@@ -383,30 +451,33 @@ const resumeTask = async (taskId: number, username: string | undefined) => {
 
     const deviceList = task.Device.map(a => a.Device.id)
 
-    deviceList.forEach(async (deviceId) => {
+    for (const deviceId of deviceList) {
       await mqttService.resumeTask(deviceId, taskId)
-    })
+    }
 
+    
+
+    await prisma.device.updateMany({
+      where: {
+       id : {
+        in : deviceList
+       },
+      },
+      data: {
+        status : "RUNNING",
+      },
+    })
     return task
   }
   catch (e: any) {
-    throw ({ name: 'ValidationError', message: "Not Found or Already RUNNING" });
+    errorHandler(e)
   }
 }
 
 const getLogs = async (taskId: number) => {
   try {
 
-  const task =  await prisma.task.findFirst({
-      where: {
-        id: taskId
-      }
-    })
 
-    if(!task){
-      throw ({ name: 'ValidationError', message: "Task not found" });
-
-    }
 
     const logs = await prisma.log.findMany({
       where: {
@@ -417,7 +488,7 @@ const getLogs = async (taskId: number) => {
   }
 
   catch (e: any) {
-    throw ({ name: 'ValidationError', message: JSON.stringify(e) });
+    errorHandler(e)
   }
 }
 
