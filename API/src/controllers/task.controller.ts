@@ -41,33 +41,35 @@ taskRouter.get('/:taskId', async (req: Request, res: Response) => {
 
 taskRouter.get('/:taskId/logs', async (req: Request, res: Response) => {
     const taskId = parseInt(req.params.taskId)
-    const sensors = await taskService.getLogs(taskId)
+    const type = req.query.type as string
+    const sensors = await taskService.getLogs(taskId,type)
     res.status(200).json(sensors)
 })
+
 
 taskRouter.get('/', async (req: Request, res: Response) => {
     const sensors = await taskService.findAllTask()
     res.status(200).json(sensors)
 })
 
-taskRouter.put('/complete/:taskId', async (req: Request, res: Response) => {
+taskRouter.put('/:taskId/complete', async (req: Request, res: Response) => {
     const username = req.user?.username
     const taskId = parseInt(req.params.taskId)
-    const sensors = await taskService.completeTask(taskId,username)
+    const sensors = await taskService.completeTask(taskId, username)
     res.status(200).json(sensors)
 })
 
-taskRouter.put('/pause/:taskId', async (req: Request, res: Response) => {
+taskRouter.put('/:taskId/pause', async (req: Request, res: Response) => {
     const username = req.user?.username
     const taskId = parseInt(req.params.taskId)
-    const sensors = await taskService.pasueTask(taskId,username)
+    const sensors = await taskService.pasueTask(taskId, username)
     res.status(200).json(sensors)
 })
 
-taskRouter.put('/resume/:taskId', async (req: Request, res: Response) => {
+taskRouter.put(':taskId/resume/', async (req: Request, res: Response) => {
     const username = req.user?.username
     const taskId = parseInt(req.params.taskId)
-    const sensors = await taskService.resumeTask(taskId,username)
+    const sensors = await taskService.resumeTask(taskId, username)
     res.status(200).json(sensors)
 })
 

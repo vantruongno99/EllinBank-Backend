@@ -30,11 +30,16 @@ async function main(data: any, topic: string) {
 
 const addLog = async (log: Log) => {
     if (log.taskId) {
+        try{
         const res = await prisma.log.create({
             data: log
         })
 
         console.log(res)
+    }
+    catch (e){
+        console.error(JSON.stringify(e))
+    }
     }
 }
 
@@ -98,9 +103,13 @@ process.env.NODE_ENV !== "production" &&
     setInterval(() => {
     const d = new Date();
     let time = d.getTime() / 1000;
-    const obj = `LOG,2,${time},test,${Math.floor(Math.random() * 10000)},`
-    publish('ToServer/AAAAAA', obj);
-}, 500);
+    const obj1 = `LOG,1,${time},test,${Math.floor(Math.random() * 10000)},`
+    const obj2 = `LOG,1,${time},test,${Math.floor(Math.random() * 10000)},`
+
+    publish('ToServer/AAAAAA', obj1);
+    publish('ToServer/BBBBBB', obj2);
+
+}, 50);
 
 
 

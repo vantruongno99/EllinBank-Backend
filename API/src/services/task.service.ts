@@ -474,15 +474,19 @@ const resumeTask = async (taskId: number, username: string | undefined) => {
   }
 }
 
-const getLogs = async (taskId: number) => {
+const getLogs = async (taskId: number, type : string|undefined) => {
   try {
-
-
-
     const logs = await prisma.log.findMany({
       where: {
-        taskId: taskId
-      }
+        taskId: taskId,
+        ...(type && {logType : type})
+      },
+      orderBy: [
+        {
+          timestampUTC: 'asc',
+        },
+       
+      ],
     })
     return logs
   }
@@ -491,6 +495,8 @@ const getLogs = async (taskId: number) => {
     errorHandler(e)
   }
 }
+
+
 
 
 export default {
