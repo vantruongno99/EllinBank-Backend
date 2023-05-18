@@ -30,16 +30,16 @@ async function main(data: any, topic: string) {
 
 const addLog = async (log: Log) => {
     if (log.taskId) {
-        try{
-        const res = await prisma.log.create({
-            data: log
-        })
+        try {
+            const res = await prisma.log.create({
+                data: log
+            })
 
-        console.log(res)
-    }
-    catch (e){
-        console.error(JSON.stringify(e))
-    }
+            console.log(res)
+        }
+        catch (e) {
+            console.error(JSON.stringify(e))
+        }
     }
 }
 
@@ -99,17 +99,26 @@ const publish = (topic: string, msg: string) => {
 }
 
 
-process.env.NODE_ENV !== "production" && 
+process.env.NODE_ENV !== "production" &&
     setInterval(() => {
-    const d = new Date();
-    let time = d.getTime() / 1000;
-    const obj1 = `LOG,1,${time},test,${Math.floor(Math.random() * 10000)},`
-    const obj2 = `LOG,1,${time},test,${Math.floor(Math.random() * 10000)},`
+        const d = new Date();
+        let time = Math.trunc(d.getTime() / 1000);
+        const obj1 = `LOG,${Math.floor(Math.random() * 10)},${time},test,${Math.floor(Math.random() * 10000)},`
+        const obj2 = `LOG,${Math.floor(Math.random() * 10)},${time},test,${Math.floor(Math.random() * 10000)},`
+        const obj3 = `LOG,${Math.floor(Math.random() * 10)},${time},test,${Math.floor(Math.random() * 10000)},`
+        const obj4 = `LOG,${Math.floor(Math.random() * 10)},${time},test,${Math.floor(Math.random() * 10000)},`
+        const obj5 = `LOG,${Math.floor(Math.random() * 10)},${time},test,${Math.floor(Math.random() * 10000)},`
 
-    publish('ToServer/AAAAAA', obj1);
-    publish('ToServer/BBBBBB', obj2);
+        publish('ToServer/AAAAAA', obj1);
+        publish('ToServer/BBBBBB', obj2);
+        publish('ToServer/CCCCC', obj3);
 
-}, 50);
+        publish('ToServer/DDDDD', obj4);
+
+        publish('ToServer/EEEEE', obj5);
+
+
+    }, 50);
 
 
 
