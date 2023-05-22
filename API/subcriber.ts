@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import mqtt from 'mqtt'
 import config from './src/utils/config'
+import {subLogger} from './src/utils/logger';
 
 
 const prisma = new PrismaClient()
@@ -35,10 +36,10 @@ const addLog = async (log: Log) => {
                 data: log
             })
 
-            console.log(res)
+            subLogger.info(JSON.stringify(res))
         }
         catch (e) {
-            console.error(JSON.stringify(e))
+            subLogger.error(JSON.stringify(e))
         }
     }
 }
@@ -46,8 +47,7 @@ const addLog = async (log: Log) => {
 function messsageReceived(topic: string, message: any, packet: string) {
     try {
         const data = message.toString();
-        console.log(data)
-        console.log(topic)
+        subLogger.info(`${topic} - ${data}`)
         main(data, topic)
     }
     catch (err: any) {
