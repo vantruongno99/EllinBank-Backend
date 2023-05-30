@@ -1,10 +1,19 @@
 version: "3.9"
 services:
   api:
+    container_name: api
     build: .
     ports:
       - "3003:3003"
     volumes:
       - .:/code
+    links:
+      - redis
+    environment:
+      - NODE_ENV=production
+  redis:
+    container_name: redis
+    image: 'redis:alpine'
+    ports:
+      - '6379:6379'
       
-

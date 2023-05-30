@@ -6,5 +6,6 @@ export interface User extends UserProfile{
 export interface UserProfile {
     id: number;
     username: string;
+    role : string
 }
 

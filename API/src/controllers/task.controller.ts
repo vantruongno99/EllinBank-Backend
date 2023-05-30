@@ -39,10 +39,10 @@ taskRouter.get('/:taskId', async (req: Request, res: Response) => {
     res.status(200).json(sensors)
 })
 
-taskRouter.get('/:taskId/logs', async (req: Request, res: Response) => {
+taskRouter.get('/:taskId/logs/:type', async (req: Request, res: Response) => {
     const taskId = parseInt(req.params.taskId)
-    const type = req.query.type as string
-    const sensors = await taskService.getLogs(taskId,type)
+    const type = "test"
+    const sensors = await taskService.getLogs(taskId, type)
     res.status(200).json(sensors)
 })
 

@@ -3,6 +3,7 @@ import { prisma } from "../../prisma/prismaClient"
 import { ConfigSend } from "../models/mqtt.modals";
 import mqttService from "./mqtt.service";
 import errorHandler from "../utils/errorHandler"
+import redisClient from "../redis/redisClient";
 
 
 const createTask = async (task: TaskInput, user: string | undefined) => {
@@ -80,11 +81,11 @@ const assignSensor = async (taskId: number, deviceId: string) => {
 
     await prisma.device.update({
       where: {
-       id : deviceId,
+        id: deviceId,
       },
       data: {
-        status : "RUNNING",
-        assigned : true
+        status: "RUNNING",
+        assigned: true
       },
     })
 
@@ -120,11 +121,11 @@ const unassignSensor = async (taskId: number, deviceId: string) => {
 
     await prisma.device.update({
       where: {
-       id : deviceId,
+        id: deviceId,
       },
       data: {
-        status : "READY",
-        assigned : false
+        status: "READY",
+        assigned: false
       },
     })
 
@@ -214,16 +215,16 @@ const deleteTask = async (taskId: number) => {
         await mqttService.stopTask(deviceId, taskId)
       }
 
-  
+
       await prisma.device.updateMany({
         where: {
-         id :{
-          in : deviceList
-         },
+          id: {
+            in: deviceList
+          },
         },
         data: {
-          status : "READY",
-          assigned : false
+          status: "READY",
+          assigned: false
         },
       })
 
@@ -298,7 +299,7 @@ const completeTask = async (taskId: number, username: string | undefined) => {
         Device: {
           select: {
             Device: true,
-            
+
           }
         }
       },
@@ -316,18 +317,18 @@ const completeTask = async (taskId: number, username: string | undefined) => {
       await mqttService.stopTask(deviceId, taskId)
     }
 
-    
 
-    
+
+
     await prisma.device.updateMany({
       where: {
-       id :{
-        in : deviceList
-       },
+        id: {
+          in: deviceList
+        },
       },
       data: {
-        status : "READY",
-        assigned : false
+        status: "READY",
+        assigned: false
       },
     })
 
@@ -385,19 +386,19 @@ const pasueTask = async (taskId: number, username: string | undefined) => {
       await mqttService.pauseTask(deviceId, taskId)
     }
 
-    
 
 
 
-    
+
+
     await prisma.device.updateMany({
       where: {
-       id :{
-        in : deviceList
-       },
+        id: {
+          in: deviceList
+        },
       },
       data: {
-        status : "PAUSED",
+        status: "PAUSED",
       },
     })
 
@@ -455,16 +456,16 @@ const resumeTask = async (taskId: number, username: string | undefined) => {
       await mqttService.resumeTask(deviceId, taskId)
     }
 
-    
+
 
     await prisma.device.updateMany({
       where: {
-       id : {
-        in : deviceList
-       },
+        id: {
+          in: deviceList
+        },
       },
       data: {
-        status : "RUNNING",
+        status: "RUNNING",
       },
     })
     return task
@@ -474,21 +475,37 @@ const resumeTask = async (taskId: number, username: string | undefined) => {
   }
 }
 
-const getLogs = async (taskId: number, type : string|undefined) => {
+const getLogs = async (taskId: number, type: string | undefined) => {
   try {
-    const logs = await prisma.log.findMany({
-      where: {
-        taskId: taskId,
-        ...(type && {logType : type})
-      },
-      orderBy: [
-        {
-          timestampUTC: 'asc',
+    const cacheResults = await redisClient.get(`${taskId}-${type}`);
+    if (cacheResults) {
+      return JSON.parse(cacheResults);
+    }
+
+    else {
+      const task = await prisma.task.findFirstOrThrow({
+        where: {
+          id: taskId
+        }
+      })
+
+      const logs = await prisma.log.findMany({
+        where: {
+          taskId: taskId,
+          ...(type && { logType: type })
         },
-       
-      ],
-    })
-    return logs
+        orderBy: [
+          {
+            timestampUTC: 'asc',
+          },
+
+        ],
+      })
+      if (task.status === "COMPLETED") {
+        await redisClient.set(`${taskId}-${type}`, JSON.stringify(logs));
+      }
+      return logs
+    }
   }
 
   catch (e: any) {

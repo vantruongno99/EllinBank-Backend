@@ -60,4 +60,16 @@ const userExtractor = async (req: Request, response: Response, next: NextFunctio
 
 }
 
-export default { errorHandler, unknownEndpoint, tokenExtractor, userExtractor }
+
+const adminRequire = async (req: Request, response: Response, next: NextFunction) => {
+    const user = req.user
+    if (user?.role !== "admin") {
+        response.status(403).json({ error: 'not admin' })
+        return;
+    }
+    next()
+
+
+}
+
+export default { errorHandler, unknownEndpoint, tokenExtractor, userExtractor, adminRequire }

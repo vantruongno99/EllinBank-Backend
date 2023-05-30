@@ -4,9 +4,10 @@ const prisma = new PrismaClient()
 async function main() {
     try {
         const user = await userService.createUser({
-            username: "test",
-            email: "test@gmail.com",
-            password: "12345678"
+            username: "super",
+            email: "super@gmail.com",
+            password: "12345678",
+            role : "admin"
         });
         console.log(user)
     }
@@ -14,47 +15,16 @@ async function main() {
         console.log(e)
     }
 
-    try {
-        const user = await userService.createUser({
-            username: "super",
-            email: "super@gmail.com",
-            password: "12345678"
-        });
-        console.log(user)
-    }
-    catch (e: any) {
-        console.log(e)
-    }
 
     try {
         const newDevice = await prisma.device.createMany({
             data: [{
-                id: "AAAAAA",
-                name: "AAAAAA"
-            },{
-                id: "BBBBBB",
-                name: "BBBBBB"
+                id: "test",
+                name: "test"
             }]
         })
         console.log(newDevice)
 
-    }
-    catch (e: any) {
-        console.log(e)
-    }
-
-    try {
-        const newTask = await prisma.task.create({
-            data: {
-                createdUTC : new Date(),
-                name: "test",
-                startTime: new Date(),
-                endTime: new Date(new Date().setDate((new Date()).getDate() + 1)),
-                createUser: "test",
-                logPeriod: 1
-            }
-        })
-        console.group(newTask)
     }
     catch (e: any) {
         console.log(e)

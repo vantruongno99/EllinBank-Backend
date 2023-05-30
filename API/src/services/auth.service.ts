@@ -24,7 +24,8 @@ const login = async (input: LoginInput) => {
     select: {
       email: true,
       username: true,
-      hashedPassword: true
+      hashedPassword: true,
+      role : true
     },
   });
 
@@ -32,7 +33,7 @@ const login = async (input: LoginInput) => {
     const match = await bcrypt.compare(password, user.hashedPassword)
 
     if (match) {
-      const res = (({ username, email }) => ({ username, email }))(user);
+      const res = (({ username, email, role }) => ({ username, email, role }))(user);
       return {
         ...res,
         token: tokenGenerator(user)

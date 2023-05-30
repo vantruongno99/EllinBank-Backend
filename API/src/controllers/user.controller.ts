@@ -7,13 +7,16 @@ require('express-async-errors');
 
 const userRouter = Router();
 
-
-userRouter.get('/', middleware.userExtractor, async (req: Request, res: Response) => {
+userRouter.get('/', middleware.userExtractor, middleware.adminRequire, async (req: Request, res: Response) => {
     const users = await userService.findAllUser()
     res.status(200).json(users)
 })
 
-userRouter.get('/:username', middleware.userExtractor, async (req: Request, res: Response) => {
+userRouter.get('/current', middleware.userExtractor, async (req: Request, res: Response) => {
+    res.status(200).json(req.user)
+})
+
+userRouter.get('/:username', middleware.userExtractor, middleware.adminRequire, async (req: Request, res: Response) => {
     const requestedUser: string = req.params.username
     if (!requestedUser) {
         res.status(500).send('username is blank')
@@ -26,13 +29,8 @@ userRouter.get('/:username', middleware.userExtractor, async (req: Request, res:
     res.status(200).json(user);
 })
 
-userRouter.get('/currentUser', middleware.userExtractor, async (req: Request, res: Response) => {
-    const user = req.user
-    res.status(200).send(user)
-})
 
-
-userRouter.post('/signup', async (req: Request, res: Response) => {
+userRouter.post('/signup', middleware.userExtractor, middleware.adminRequire, async (req: Request, res: Response) => {
     const body: RegisterInput = req.body
     const user = await userService.createUser(body)
     res.status(200).send(user)

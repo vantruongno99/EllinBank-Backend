@@ -35,7 +35,6 @@ const addLog = async (log: Log) => {
             const res = await prisma.log.create({
                 data: log
             })
-
             subLogger.info(JSON.stringify(res))
         }
         catch (e) {
@@ -84,7 +83,7 @@ const checkMessageHandle = (message: String, topic: String) => {
 
 
 client.on("connect", function () {
-    console.log("connected");
+    console.log("Sub connected");
 })
 
 client.on('message', messsageReceived);
@@ -112,9 +111,7 @@ process.env.NODE_ENV !== "production" &&
         publish('ToServer/AAAAAA', obj1);
         publish('ToServer/BBBBBB', obj2);
         publish('ToServer/CCCCC', obj3);
-
         publish('ToServer/DDDDD', obj4);
-
         publish('ToServer/EEEEE', obj5);
 
 

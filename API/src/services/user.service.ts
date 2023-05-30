@@ -7,6 +7,7 @@ const createUser = async (register: RegisterInput) => {
   const email = register.email.trim()
   const password = register.password.trim()
   const username = register.username.trim()
+  const role = register?.role
 
   if (!email) {
     throw ({ name: 'ValidationError', message: { email: ["can't be blank"] } });
@@ -26,7 +27,8 @@ const createUser = async (register: RegisterInput) => {
       data: {
         username,
         email,
-        hashedPassword
+        hashedPassword,
+        role
       }
     });
     return user
@@ -40,7 +42,15 @@ const createUser = async (register: RegisterInput) => {
 }
 
 const findAllUser = async ()=> {
-  const users = await prisma.user.findMany()
+  const users = await prisma.user.findMany(
+   {
+    select: {
+      username: true,
+      id: true,
+      email : true,
+      role : true
+   }}
+  )
   return users;
 }
 
@@ -53,7 +63,8 @@ const findUserByUsername = async (username: string) : Promise<any> => {
     select: {
       username: true,
       id: true,
-      email : true
+      email : true,
+      role : true
     },
   });
 
