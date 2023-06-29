@@ -1,7 +1,8 @@
 import { RegisterInput, LoginInput } from "../models/auth.modal"
 import bcrypt from 'bcrypt'
 import { prisma } from "../../prisma/prismaClient"
-import { UserProfile } from "../models/user.modal"
+import { UserUpdate } from "../models/user.modal"
+import errorHandler from "../utils/errorHandler"
 
 const createUser = async (register: RegisterInput) => {
   const email = register.email.trim()
@@ -41,21 +42,23 @@ const createUser = async (register: RegisterInput) => {
   }
 }
 
-const findAllUser = async ()=> {
+const findAllUser = async () => {
   const users = await prisma.user.findMany(
-   {
-    select: {
-      username: true,
-      id: true,
-      email : true,
-      role : true
-   }}
+    {
+      select: {
+        username: true,
+        id: true,
+        email: true,
+        role: true
+      }
+    }
   )
   return users;
 }
 
 
-const findUserByUsername = async (username: string) : Promise<any> => {
+const findUserByUsername = async (username: string): Promise<any> => {
+
   const user = await prisma.user.findUnique({
     where: {
       username,
@@ -63,8 +66,8 @@ const findUserByUsername = async (username: string) : Promise<any> => {
     select: {
       username: true,
       id: true,
-      email : true,
-      role : true
+      email: true,
+      role: true
     },
   });
 
@@ -74,7 +77,18 @@ const findUserByUsername = async (username: string) : Promise<any> => {
   return user;
 }
 
+const deleteUser = async (username: string): Promise<void> => {
+  try {
+    await prisma.user.delete({
+      where: {
+        username,
+      }
+    });
+  }
+  catch (e) {
+    errorHandler(e)
+  }
+}
 
 
-
-export default { createUser, findAllUser, findUserByUsername }
+export default { createUser, findAllUser, findUserByUsername, deleteUser }

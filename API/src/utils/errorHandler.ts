@@ -2,7 +2,6 @@ import { Prisma } from '@prisma/client'
 const errorHandler = (e: any) => {
     if (e instanceof Prisma.PrismaClientKnownRequestError) {
         switch (e.code) {
-            
             case 'P2002': {
                 throw ({ name: 'DuplicationError', message: `${e.meta?.target} already exist` });
             }

@@ -11,9 +11,11 @@ services:
       - redis
     environment:
       - NODE_ENV=production
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
   redis:
     container_name: redis
     image: 'redis:alpine'
-    ports:
-      - '6379:6379'
+    restart: always
       

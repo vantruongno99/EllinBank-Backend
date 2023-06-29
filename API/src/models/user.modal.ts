@@ -9,3 +9,8 @@ export interface UserProfile {
     role : string
 }
 
+export interface UserUpdate {
+   email? : string,
+   role? : string,
+}
+

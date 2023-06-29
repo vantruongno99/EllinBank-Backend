@@ -2,6 +2,7 @@ import { Request, Response, Router } from 'express';
 import userService from '../services/user.service';
 import middleware from "../utils/middleware"
 import { RegisterInput } from '../models/auth.modal';
+import { UserUpdate } from '../models/user.modal';
 
 require('express-async-errors');
 
@@ -35,6 +36,22 @@ userRouter.post('/signup', middleware.userExtractor, middleware.adminRequire, as
     const user = await userService.createUser(body)
     res.status(200).send(user)
 
+})
+
+
+userRouter.delete('/:username', middleware.userExtractor, middleware.adminRequire, async (req: Request, res: Response) => {
+    const requestedUser: string = req.params.username
+    if (!requestedUser) {
+        res.status(500).send('username is blank')
+        return;
+    }
+    if(req.user?.username === requestedUser){
+        res.status(500).send('you can not delete your own account')
+        return;
+    }
+     await userService.deleteUser(requestedUser)
+   
+    res.status(200).end();
 })
 
 

@@ -1,0 +1,18 @@
+import { Request, Response, Router } from 'express';
+import AuthService from '../services/auth.service';
+import middleware from "../utils/middleware"
+import StatService from '../services/stat.service';
+
+require('express-async-errors');
+
+const statController = Router();
+
+statController.get('/', middleware.userExtractor, async (req: Request, res: Response) => {
+    const stat = await StatService.getStat()
+    res.status(200).json(stat)
+})
+
+
+
+
+export default statController

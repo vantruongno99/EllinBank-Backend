@@ -66,7 +66,7 @@ taskRouter.put('/:taskId/pause', async (req: Request, res: Response) => {
     res.status(200).json(sensors)
 })
 
-taskRouter.put(':taskId/resume/', async (req: Request, res: Response) => {
+taskRouter.put('/:taskId/resume', async (req: Request, res: Response) => {
     const username = req.user?.username
     const taskId = parseInt(req.params.taskId)
     const sensors = await taskService.resumeTask(taskId, username)
