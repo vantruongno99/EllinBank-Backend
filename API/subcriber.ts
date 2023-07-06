@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import mqtt from 'mqtt'
 import config from './src/utils/config'
-import {subLogger} from './src/utils/logger';
+import { subLogger } from './src/utils/logger';
 
 
 const prisma = new PrismaClient()
@@ -17,6 +17,12 @@ export type Log = {
     deviceId: string
 }
 
+type Check = {
+    taskId: number;
+    timestampUTC: number;
+    deviceId: string;
+}
+
 
 async function main(data: any, topic: string) {
     const type = typeofMessage(data)
@@ -24,6 +30,10 @@ async function main(data: any, topic: string) {
         case "LOG": {
             const test: Log = logMessageHandle(data, topic)
             await addLog(test)
+        }
+        case "CHK": {
+            const check:Check = checkMessageHandle(data, topic)
+            await addCheck(check)
         }
     }
 
@@ -34,6 +44,25 @@ const addLog = async (log: Log) => {
         try {
             const res = await prisma.log.create({
                 data: log
+            })
+            subLogger.info(JSON.stringify(res))
+        }
+        catch (e) {
+            subLogger.error(JSON.stringify(e))
+        }
+    }
+}
+
+const addCheck = async (check: Check) => {
+    if (check.deviceId) {
+        try {
+            const res = await prisma.device.update({
+                where : {
+                    id : check.deviceId
+                },
+                data :{
+                    lastCheck : new Date(check.timestampUTC * 1000)
+                }
             })
             subLogger.info(JSON.stringify(res))
         }
@@ -74,10 +103,11 @@ const logMessageHandle = (message: String, topic: String) => {
 }
 const checkMessageHandle = (message: String, topic: String) => {
     const value: string[] = message.split(',')
+    const deviceId = topic.split('/')[1]
     return ({
         taskId: parseInt(value[1]),
         timestampUTC: parseInt(value[2]),
-        deviceId: topic
+        deviceId: deviceId
     })
 }
 

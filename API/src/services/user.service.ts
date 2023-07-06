@@ -5,10 +5,11 @@ import { UserUpdate } from "../models/user.modal"
 import errorHandler from "../utils/errorHandler"
 
 const createUser = async (register: RegisterInput) => {
-  const email = register.email.trim()
-  const password = register.password.trim()
-  const username = register.username.trim()
-  const role = register?.role
+  const email: string = register.email.trim()
+  const password: string = register.password.trim()
+  const username: string = register.username.trim()
+  const company: string | undefined = register?.company
+  const role: string | undefined = register?.role
 
   if (!email) {
     throw ({ name: 'ValidationError', message: { email: ["can't be blank"] } });
@@ -29,7 +30,8 @@ const createUser = async (register: RegisterInput) => {
         username,
         email,
         hashedPassword,
-        role
+        role,
+        company
       }
     });
     return user
@@ -49,7 +51,8 @@ const findAllUser = async () => {
         username: true,
         id: true,
         email: true,
-        role: true
+        role: true,
+        company: true,
       }
     }
   )
@@ -67,7 +70,8 @@ const findUserByUsername = async (username: string): Promise<any> => {
       username: true,
       id: true,
       email: true,
-      role: true
+      role: true,
+      company: true
     },
   });
 

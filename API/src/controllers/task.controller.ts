@@ -41,7 +41,7 @@ taskRouter.get('/:taskId', async (req: Request, res: Response) => {
 
 taskRouter.get('/:taskId/logs/:type', async (req: Request, res: Response) => {
     const taskId = parseInt(req.params.taskId)
-    const type = "test"
+    const type = req.params.type
     const sensors = await taskService.getLogs(taskId, type)
     res.status(200).json(sensors)
 })
@@ -72,8 +72,6 @@ taskRouter.put('/:taskId/resume', async (req: Request, res: Response) => {
     const sensors = await taskService.resumeTask(taskId, username)
     res.status(200).json(sensors)
 })
-
-
 
 taskRouter.delete('/:taskId', async (req: Request, res: Response) => {
     const taskId = parseInt(req.params.taskId)

@@ -17,13 +17,15 @@ model User {
   role           String @default("user")
   hashedPassword String
   Task           Task[]
+  company        String?
 }
 
 model Device {
   id        String        @unique @id
   name      String        @unique
-  updateUTC DateTime?     @updatedAt
-  status    String       @default("READY")
+  lastCheck DateTime?
+  updateUTC DateTime?    
+  status    String     @default("READY")
   assigned  Boolean    @default(false)  
   CH4_SN    String?       
   O2_SN     String?        
@@ -49,6 +51,7 @@ model Task {
   endTime      DateTime
   createdUTC   DateTime
   completedUTC DateTime? 
+  comment      String        @default("")
   name         String        @unique
   logPeriod    Int
   status       String      @default("ONGOING")

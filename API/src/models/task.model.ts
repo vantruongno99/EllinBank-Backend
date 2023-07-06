@@ -11,5 +11,6 @@ export interface TaskEditInput {
     id: number,
     name : string,
     logPeriod : number,
+    comment : string,
 }
 

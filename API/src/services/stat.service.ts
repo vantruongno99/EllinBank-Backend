@@ -9,8 +9,8 @@ import { Stat } from "../models/stat.modal"
 const getStat = async () => {
     try {
         const numberOfDevices = await prisma.device.count()
-        const numberOfTasks = await prisma.device.count()
-        const numberOfOngoingTasks = await prisma.device.count({
+        const numberOfTasks = await prisma.task.count()
+        const numberOfOngoingTasks = await prisma.task.count({
             where: {
                 status: {
                     not: "Completed"

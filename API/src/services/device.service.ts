@@ -20,7 +20,8 @@ const createDevice = async (device: DeviceInput) => {
     const newSensor = await prisma.device.create({
       data: {
         id,
-        name
+        name,
+        updateUTC: new Date()
       }
     })
     return newSensor
@@ -50,7 +51,8 @@ const editDevice = async (deviceId: string, device: EditDeviceInput) => {
         id: deviceId
       },
       data: {
-        ...device
+        ...device,
+        updateUTC: new Date()
       },
     })
 
@@ -94,7 +96,15 @@ const deleteDevice = async (deviceId: string) => {
       },
     })
 
+    await prisma.log.deleteMany({
+      where :{
+        deviceId : deviceId
+      }
+    })
+
   }
+
+
   catch (e: any) {
     errorHandler(e)
   }

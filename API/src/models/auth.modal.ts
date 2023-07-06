@@ -2,7 +2,8 @@ export interface RegisterInput {
     email :string;
     username : string;
     password : string;
-    role? : string
+    role? : string;
+    company? : string
 }
 
 export interface LoginInput {
