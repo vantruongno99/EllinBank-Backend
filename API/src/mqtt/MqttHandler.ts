@@ -35,30 +35,33 @@ class MqttHandler {
         await this.mqttClient.end()
     }
 
-    async expectMessage(topicT: string) {
-        await this.mqttClient.subscribe(topicT, function (err: any) {
-        })
-
-        function wait() {
+    async expectMessage(topicT: string , type : string) {
+        const toTopic = `ToServer/${topicT.split('/')[1]}`
+        const wait = () => {
             return new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('timeout succeeded')), 500);
+                setTimeout(() => {
+                    this.mqttClient.unsubscribe(toTopic, function (err: any) {
+                        console.log("unsubcribe")
+                    });
+                    reject(new Error('timeout succeeded'))
+                }
+                    , 5000);
             });
         }
 
         const expect = () => new Promise((resolve, reject) => {
+
+            this.mqttClient.subscribe(toTopic, function (err: any) {
+                console.log("subcribe")
+            })
+
             this.mqttClient.on('message', (topic: string, message: string) => {
-
-
-                if (topicT === topic.toString()) {
-                    this.mqttClient.unsubscribe(topicT, function (err: any) {
-                        if (err) {
-
-                        }
-                        else {
-                            console.log("unsubcribe")
-                        }
-                        return resolve(JSON.parse(message.toString()));
+                const output = message.toString()
+                if (toTopic === topic.toString() && output.split(',')[0] === type) {
+                    this.mqttClient.unsubscribe(toTopic, function (err: any) {
+                        console.log("unsubcribe")
                     });
+                    return resolve(output);
                 }
             });
         })
@@ -67,6 +70,20 @@ class MqttHandler {
         return await Promise.race([wait(), expect()]);
 
     }
+
+    async sendAndExpect(message: string, topic: string) {
+        try { 
+            const type = message.split(',')[0]
+            let [someResult, anotherResult] = await Promise.all([this.expectMessage(topic,type), await this.sendMessage(message, topic)]);
+            return someResult
+        }
+
+        catch (err) {
+            throw new Error('no response')
+        }
+    }
 }
+
+
 
 export default MqttHandler;

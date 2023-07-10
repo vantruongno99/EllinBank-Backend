@@ -97,8 +97,8 @@ const deleteDevice = async (deviceId: string) => {
     })
 
     await prisma.log.deleteMany({
-      where :{
-        deviceId : deviceId
+      where: {
+        deviceId: deviceId
       }
     })
 
@@ -156,30 +156,39 @@ const findAvaibleDevice = async () => {
 }
 
 const calibrateSensor = async (deviceId: string, input: CalibrateSensorInput) => {
-  const device = await prisma.device.findUniqueOrThrow({
-    where: {
-      id: deviceId,
-    },
-  })
+  try {
+    const device = await prisma.device.findUniqueOrThrow({
+      where: {
+        id: deviceId,
+      },
+    })
 
-  if (device.status === "RUNNING") {
-    throw ({ name: 'ValidationError', message: "Device still has running tasks" });
+    if (device.status === "RUNNING") {
+      throw ({ name: 'ValidationError', message: "Device still has running tasks" });
+    }
+    return await mqttService.calibrate(deviceId, input)
   }
-  await mqttService.calibrate(deviceId, input)
+  catch (e: any) {
+    throw ({ name: 'SensorError', message: "No or Invalid Response from sensor" });
+  }
 }
 
 const readSensor = async (deviceId: string, sensorType: SensorType) => {
-  const device = await prisma.device.findUniqueOrThrow({
-    where: {
-      id: deviceId,
+  try {
+    const device = await prisma.device.findUniqueOrThrow({
+      where: {
+        id: deviceId,
+      }
+    })
+
+    if (device.status === "RUNNING") {
+      throw ({ name: 'ValidationError', message: "Device still has running tasks" });
     }
-  })
-
-  if (device.status === "RUNNING") {
-    throw ({ name: 'ValidationError', message: "Device still has running tasks" });
+    return await mqttService.read(deviceId, sensorType)
   }
-  await mqttService.read(deviceId, sensorType)
-
+  catch (e: any) {
+    throw ({ name: 'SensorError', message: "No or Invalid Response from sensor" });
+  }
 }
 
 const pauseDevice = async (id: string) => {

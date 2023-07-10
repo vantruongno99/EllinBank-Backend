@@ -12,6 +12,11 @@ const errorHandler = ((error: any, req: Request, res: Response, next: NextFuncti
         return res.status(400).json({
             error: error.message
         })
+    } else if (error.name === 'SensorError') {
+        return res.status(400).json({
+            error: error.message
+        })
+
     } else if (error.name === 'JsonWebTokenError') {
         return res.status(401).json({
             error: 'invalid token'

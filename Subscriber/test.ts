@@ -3,9 +3,7 @@ import mqttClient from "./mqtt/mqttClient";
 const c = async () => {
 
     try {
-
-
-        let [someResult, anotherResult] = await Promise.all([mqttClient.expectMessage('222222222'), await mqttClient.sendMessage('2222222222', '2222222223')]);
+        let [someResult, anotherResult] = await Promise.all([mqttClient.expectMessage('222222222'), await mqttClient.sendMessage('2222222222', '222222222')]);
 
         console.log(someResult)
     }

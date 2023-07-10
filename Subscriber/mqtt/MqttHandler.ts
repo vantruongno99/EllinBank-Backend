@@ -4,7 +4,7 @@ class MqttHandler {
     mqttClient: any;
     a: number;
     constructor() {
-        this.mqttClient = mqtt.connect("mqtt://localhost");
+        this.mqttClient = mqtt.connect("mqtt://170.64.187.153:1883");
 
         this.a = 0;
 
@@ -40,7 +40,7 @@ class MqttHandler {
 
         function wait() {
             return new Promise((_, reject) => {
-               setTimeout(() => reject(new Error('timeout succeeded')), 500);
+               setTimeout(() => reject(new Error('timeout succeeded')), 5000);
             });
          }
 

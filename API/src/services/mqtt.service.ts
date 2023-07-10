@@ -42,12 +42,12 @@ const resumeDevice = resumeTask
 
 
 const calibrate = async (deviceId : string , config : CalibrateSensorInput) =>{
-
     try {
-        await mqttClient.sendMessage(`CAL,${config.gasType}, ${config.calType}, ${config.calValue}`, `ToSensor/${deviceId}`)
+       const result =  await mqttClient.sendAndExpect(`CAL,${config.gasType}, ${config.calType}, ${config.calValue}`, `ToSensor/${deviceId}`)
+       return result
     }
     catch(e) {
-        console.log(e);
+        throw new Error("No or invalid response from sensor");
     }
 
 }
@@ -55,10 +55,11 @@ const calibrate = async (deviceId : string , config : CalibrateSensorInput) =>{
 const read = async (deviceId : string , sensorType : SensorType) =>{
 
     try {
-        await mqttClient.sendMessage(`READ,${sensorType}`, `ToSensor/${deviceId}`)
+        const result =  await mqttClient.sendAndExpect(`READ,${sensorType}`, `ToSensor/${deviceId}`)
+        return result
     }
     catch(e) {
-        console.log(e);
+        throw new Error("No or invalid response from sensor");
     }
 
 }
