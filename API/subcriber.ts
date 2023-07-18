@@ -2,6 +2,7 @@ import { PrismaClient } from '@prisma/client'
 import mqtt from 'mqtt'
 import config from './src/utils/config'
 import { subLogger } from './src/utils/logger';
+import { Prisma } from '@prisma/client'
 
 
 const prisma = new PrismaClient()
@@ -27,13 +28,18 @@ type Check = {
 async function main(data: any, topic: string) {
     const type = typeofMessage(data)
     switch (type) {
-        case "LOG": {
+        case "LOG": 
             const test: Log = logMessageHandle(data, topic)
             await addLog(test)
-        }
-        case "CHK": {
+            break;
+        
+        case "CHK": 
             const check:Check = checkMessageHandle(data, topic)
             await addCheck(check)
+            break;
+        
+        default:{
+            
         }
     }
 
@@ -48,6 +54,7 @@ const addLog = async (log: Log) => {
             subLogger.info(JSON.stringify(res))
         }
         catch (e) {
+            subLogger.error(JSON.stringify(log))
             subLogger.error(JSON.stringify(e))
         }
     }
@@ -67,7 +74,22 @@ const addCheck = async (check: Check) => {
             subLogger.info(JSON.stringify(res))
         }
         catch (e) {
+            subLogger.error(JSON.stringify(check))
             subLogger.error(JSON.stringify(e))
+            if (e instanceof Prisma.PrismaClientKnownRequestError) {
+                switch (e.code) {
+                    case 'P2025': 
+                        await prisma.device.create({
+                            data : {
+                                id :check.deviceId,
+                                name : 'default'
+                            }
+                        })
+                    
+                    default:
+                }
+            }
+            
         }
     }
 }

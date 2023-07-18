@@ -73,8 +73,6 @@ const adminRequire = async (req: Request, response: Response, next: NextFunction
         return;
     }
     next()
-
-
 }
 
 export default { errorHandler, unknownEndpoint, tokenExtractor, userExtractor, adminRequire }

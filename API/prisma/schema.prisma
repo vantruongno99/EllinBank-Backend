@@ -18,6 +18,13 @@ model User {
   hashedPassword String
   Task           Task[]
   company        String?
+  Company        Company? @relation(fields: [company], references: [name])
+}
+
+model Company {
+  name String @id @unique
+  Users User[]
+  Tasks Task[]
 }
 
 model Device {
@@ -58,6 +65,8 @@ model Task {
   Device       Device_Task[]
   createUser   String
   completeUser String?
+  company      String?
+  Company      Company? @relation(fields: [company], references: [name])
   User         User          @relation(fields: [createUser], references: [username])
 }
 

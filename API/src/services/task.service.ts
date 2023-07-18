@@ -184,8 +184,12 @@ const updateTask = async (taskId: string, input: TaskEditInput) => {
   }
 }
 
-const findAllTask = async () => {
-  const tasks = await prisma.task.findMany()
+const findAllTask = async (company? : string ) => {
+  const tasks = await prisma.task.findMany({
+    where : {
+          ...(company ? {company : company} : {})
+    }
+  })
   return tasks;
 }
 

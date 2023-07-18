@@ -2,12 +2,26 @@ import { PrismaClient } from '@prisma/client'
 import userService from '../src/services/user.service';
 const prisma = new PrismaClient()
 async function main() {
+
+    try {
+        const company = await prisma.company.create({
+            data: {
+                name: "CTI"
+            }
+        })
+    }
+    catch (e: any) {
+        console.log(e)
+    }
+
+
     try {
         const user = await userService.createUser({
             username: "super",
             email: "super@gmail.com",
             password: "12345678",
-            role : "admin"
+            role: "admin",
+            company : "CTI"
         });
         console.log(user)
     }

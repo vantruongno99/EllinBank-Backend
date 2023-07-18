@@ -13,6 +13,14 @@ CREATE TABLE `User` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
+CREATE TABLE `Company` (
+    `name` VARCHAR(191) NOT NULL,
+
+    UNIQUE INDEX `Company_name_key`(`name`),
+    PRIMARY KEY (`name`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
 CREATE TABLE `Device` (
     `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
@@ -57,6 +65,7 @@ CREATE TABLE `Task` (
     `status` VARCHAR(191) NOT NULL DEFAULT 'ONGOING',
     `createUser` VARCHAR(191) NOT NULL,
     `completeUser` VARCHAR(191) NULL,
+    `company` VARCHAR(191) NULL,
 
     UNIQUE INDEX `Task_name_key`(`name`),
     PRIMARY KEY (`id`)
@@ -81,6 +90,12 @@ CREATE TABLE `Applog` (
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- AddForeignKey
+ALTER TABLE `User` ADD CONSTRAINT `User_company_fkey` FOREIGN KEY (`company`) REFERENCES `Company`(`name`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Task` ADD CONSTRAINT `Task_company_fkey` FOREIGN KEY (`company`) REFERENCES `Company`(`name`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Task` ADD CONSTRAINT `Task_createUser_fkey` FOREIGN KEY (`createUser`) REFERENCES `User`(`username`) ON DELETE RESTRICT ON UPDATE CASCADE;

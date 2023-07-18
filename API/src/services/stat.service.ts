@@ -6,15 +6,20 @@ import { Stat } from "../models/stat.modal"
 
 
 
-const getStat = async () => {
+const getStat = async (company?: string) => {
     try {
-        const numberOfDevices = await prisma.device.count()
-        const numberOfTasks = await prisma.task.count()
+        const numberOfDevices = await prisma.device.count({})
+        const numberOfTasks = await prisma.task.count({
+            where : {
+                ...(company ? {company : company} : {})
+          }
+        })
         const numberOfOngoingTasks = await prisma.task.count({
             where: {
                 status: {
                     not: "Completed"
-                }
+                },
+                    ...(company ? {company : company} : {})
             }
         })
         return ({
@@ -22,7 +27,7 @@ const getStat = async () => {
             numberOfTasks,
             numberOfOngoingTasks
 
-            
+
         })
     }
     catch (e) {

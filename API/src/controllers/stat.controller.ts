@@ -8,7 +8,11 @@ require('express-async-errors');
 const statController = Router();
 
 statController.get('/', middleware.userExtractor, async (req: Request, res: Response) => {
-    const stat = await StatService.getStat()
+    let company 
+    if(req.user?.role === "user"){
+        company = req.user.company
+    }
+    const stat = await StatService.getStat(company)
     res.status(200).json(stat)
 })
 

@@ -6,7 +6,8 @@ export interface User extends UserProfile{
 export interface UserProfile {
     id: number;
     username: string;
-    role : string
+    role : string;
+    company : string
 }
 
 export interface UserUpdate {

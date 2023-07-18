@@ -48,7 +48,11 @@ taskRouter.get('/:taskId/logs/:type', async (req: Request, res: Response) => {
 
 
 taskRouter.get('/', async (req: Request, res: Response) => {
-    const sensors = await taskService.findAllTask()
+    let company 
+    if(req.user?.role === "user"){
+        company = req.user.company
+    }
+    const sensors = await taskService.findAllTask(company)
     res.status(200).json(sensors)
 })
 
