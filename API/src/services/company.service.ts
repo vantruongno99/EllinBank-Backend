@@ -4,7 +4,7 @@ import { ConfigSend } from "../models/mqtt.modals";
 import mqttService from "./mqtt.service";
 import errorHandler from "../utils/errorHandler"
 import redisClient from "../redis/redisClient";
-import { CompanyInput } from "../models/company.modal";
+import { CompanyInput, CompanyQueryOption } from "../models/company.modal";
 
 
 const createCompany = async (company: CompanyInput) => {
@@ -37,11 +37,11 @@ const getCompany = async (name: string) => {
   try {
 
     const company = await prisma.company.findFirstOrThrow({
-      where:{
-        name : name
+      where: {
+        name: name
       },
-      include : {
-        Users : true
+      include: {
+        Users: true
       }
     })
 
@@ -55,13 +55,12 @@ const getCompany = async (name: string) => {
 
 const getUser = async (name: string) => {
   try {
-
     const company = await prisma.company.findFirstOrThrow({
-      where:{
-        name : name
+      where: {
+        name: name
       },
-      include : {
-        Users : true
+      include: {
+        Users: true
       }
     })
 
@@ -73,9 +72,57 @@ const getUser = async (name: string) => {
   }
 }
 
+const getAllCompanyData = async (name: string, option: CompanyQueryOption) => {
+
+  const startFrom = option.startFrom
+  const EndWith = option.EndWith
+
+
+  try {
+    const company = await prisma.company.findFirstOrThrow({
+      where: {
+        name: name
+      },
+      include: {
+        Users: true,
+        Tasks: {
+          where: {
+            startTime: {
+              ...(startFrom && {
+                lte: startFrom
+              })
+            },
+            endTime: {
+              ...(startFrom && {
+                gte: EndWith
+              })
+            },
+          },
+           include: {
+        Device: {
+          select: {
+            Device: true
+          }
+        }
+      },
+        },
+      }
+    })
+
+    return company
+
+  }
+  catch (e: any) {
+    errorHandler(e)
+  }
+}
+
+
+
 export default {
   createCompany,
   getAllCompany,
   getUser,
-  getCompany
+  getCompany,
+  getAllCompanyData
 }

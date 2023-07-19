@@ -5,3 +5,8 @@ export interface CompanyInput {
 export interface CompanyInfo {
     name : string
 }
+
+export interface CompanyQueryOption {
+    startFrom? : Date,
+    EndWith? : Date,
+}
