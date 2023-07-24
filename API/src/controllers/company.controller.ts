@@ -22,8 +22,8 @@ companyRouter.get('/', async (req: Request, res: Response) => {
 
 companyRouter.get('/:companyName/info', async (req: Request, res: Response) => {
     const companyName = req.params.companyName
-    const query: CompanyQueryOption = req.body
-    const company = await companyService.getAllCompanyData(companyName,query)
+    const query: CompanyQueryOption = req.query
+    const company = await companyService.getAllCompanyData(companyName, query)
     res.status(200).json(company)
 })
 

@@ -74,8 +74,8 @@ const getUser = async (name: string) => {
 
 const getAllCompanyData = async (name: string, option: CompanyQueryOption) => {
 
-  const startFrom = option.startFrom
-  const EndWith = option.EndWith
+  const from = option.from ? new Date(option.from) : null
+  const to = option.to ? new Date(option.to) : null
 
 
   try {
@@ -88,23 +88,23 @@ const getAllCompanyData = async (name: string, option: CompanyQueryOption) => {
         Tasks: {
           where: {
             startTime: {
-              ...(startFrom && {
-                lte: startFrom
+              ...(from && {
+                gte: from
               })
             },
             endTime: {
-              ...(startFrom && {
-                gte: EndWith
+              ...(to && {
+                lte: to
               })
             },
           },
-           include: {
-        Device: {
-          select: {
-            Device: true
-          }
-        }
-      },
+          include: {
+            Device: {
+              select: {
+                Device: true
+              }
+            }
+          },
         },
       }
     })
