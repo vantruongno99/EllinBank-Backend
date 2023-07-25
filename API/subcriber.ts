@@ -28,18 +28,18 @@ type Check = {
 async function main(data: any, topic: string) {
     const type = typeofMessage(data)
     switch (type) {
-        case "LOG": 
+        case "LOG":
             const test: Log = logMessageHandle(data, topic)
             await addLog(test)
             break;
-        
-        case "CHK": 
-            const check:Check = checkMessageHandle(data, topic)
+
+        case "CHK":
+            const check: Check = checkMessageHandle(data, topic)
             await addCheck(check)
             break;
-        
-        default:{
-            
+
+        default: {
+
         }
     }
 
@@ -64,11 +64,11 @@ const addCheck = async (check: Check) => {
     if (check.deviceId) {
         try {
             const res = await prisma.device.update({
-                where : {
-                    id : check.deviceId
+                where: {
+                    id: check.deviceId
                 },
-                data :{
-                    lastCheck : new Date(check.timestampUTC * 1000)
+                data: {
+                    lastCheck: new Date(check.timestampUTC * 1000)
                 }
             })
             subLogger.info(JSON.stringify(res))
@@ -78,18 +78,18 @@ const addCheck = async (check: Check) => {
             subLogger.error(JSON.stringify(e))
             if (e instanceof Prisma.PrismaClientKnownRequestError) {
                 switch (e.code) {
-                    case 'P2025': 
+                    case 'P2025':
                         await prisma.device.create({
-                            data : {
-                                id :check.deviceId,
-                                name : 'default'
+                            data: {
+                                id: check.deviceId,
+                                name: 'default'
                             }
                         })
-                    
+
                     default:
                 }
             }
-            
+
         }
     }
 }
@@ -101,7 +101,7 @@ function messsageReceived(topic: string, message: any, packet: string) {
         main(data, topic)
     }
     catch (err: any) {
-        console.log(err)
+        subLogger.error(JSON.stringify(err))
     }
 };
 
@@ -143,9 +143,18 @@ client.on('message', messsageReceived);
 
 client.subscribe('ToServer/#');
 
+
+client.on('error', (err) => {
+    subLogger.error(JSON.stringify(err))
+})
+
 const publish = (topic: string, msg: string) => {
     if (client.connected == true) {
-        client.publish(topic, msg);
+        client.publish(topic, msg, (err) => {
+            if(err instanceof Error){
+                subLogger.error(JSON.stringify(err))
+            }
+        });
     }
 }
 
