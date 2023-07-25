@@ -184,10 +184,10 @@ const updateTask = async (taskId: string, input: TaskEditInput) => {
   }
 }
 
-const findAllTask = async (company? : string ) => {
+const findAllTask = async (company?: string) => {
   const tasks = await prisma.task.findMany({
-    where : {
-          ...(company ? {company : company} : {})
+    where: {
+      ...(company ? { company: company } : {})
     }
   })
   return tasks;
@@ -479,9 +479,9 @@ const resumeTask = async (taskId: number, username: string | undefined) => {
   }
 }
 
-const getLogs = async (taskId: number, type: string | undefined) => {
+const getLogs = async (taskId: number, type?: string, deviceList?: string[]) => {
   try {
-    const cacheResults = await redisClient.get(`${taskId}-${type}`);
+    const cacheResults = await redisClient.get(`${taskId}${type ? `-${type}` : ''}${deviceList ? `-${deviceList}` : ''}`);
     if (cacheResults) {
       return JSON.parse(cacheResults);
     }
@@ -496,7 +496,12 @@ const getLogs = async (taskId: number, type: string | undefined) => {
       const logs = await prisma.log.findMany({
         where: {
           taskId: taskId,
-          ...(type && { logType: type })
+          ...(type && { logType: type }),
+          ...(deviceList && {
+            deviceId: {
+              in: deviceList
+            }
+          }),
         },
         orderBy: [
           {

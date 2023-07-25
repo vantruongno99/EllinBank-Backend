@@ -7,6 +7,6 @@ export interface CompanyInfo {
 }
 
 export interface CompanyQueryOption {
-    startFrom? : Date,
-    EndWith? : Date,
+    from? : string,
+    to? : string,
 }

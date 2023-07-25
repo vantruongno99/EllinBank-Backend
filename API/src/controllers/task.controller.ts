@@ -39,17 +39,19 @@ taskRouter.get('/:taskId', async (req: Request, res: Response) => {
     res.status(200).json(sensors)
 })
 
-taskRouter.get('/:taskId/logs/:type', async (req: Request, res: Response) => {
+taskRouter.get('/:taskId/logs', async (req: Request, res: Response) => {
     const taskId = parseInt(req.params.taskId)
-    const type = req.params.type
-    const sensors = await taskService.getLogs(taskId, type)
+    const DeviceListQuery = req.query.deviceList as string
+    const deviceList = DeviceListQuery ? JSON.parse(decodeURIComponent(DeviceListQuery)) : undefined
+    const type = req.query.type as string
+    const sensors = await taskService.getLogs(taskId, type, deviceList)
     res.status(200).json(sensors)
 })
 
 
 taskRouter.get('/', async (req: Request, res: Response) => {
-    let company 
-    if(req.user?.role === "user"){
+    let company
+    if (req.user?.role === "user") {
         company = req.user.company
     }
     const sensors = await taskService.findAllTask(company)
