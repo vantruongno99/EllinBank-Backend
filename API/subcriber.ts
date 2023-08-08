@@ -3,10 +3,19 @@ import mqtt from 'mqtt'
 import config from './src/utils/config'
 import { subLogger } from './src/utils/logger';
 import { Prisma } from '@prisma/client'
+import fs from 'fs';
 
 
 const prisma = new PrismaClient()
-var client = mqtt.connect(config.MQTT)
+
+const client = mqtt.connect(`mqtts://${config.MQTT}`, {
+    port: 8883,
+    keepalive: 10,
+    ca: fs.readFileSync('certs/ca.crt'),
+    cert: fs.readFileSync('certs/server.crt'),
+    key: fs.readFileSync('certs/server.key'),
+    rejectUnauthorized: false,
+})
 
 export type Log = {
     taskId: number,
@@ -24,13 +33,15 @@ type Check = {
     deviceId: string;
 }
 
+let logData: Log[] = []
+let n: number = 0
 
 async function main(data: any, topic: string) {
     const type = typeofMessage(data)
     switch (type) {
         case "LOG":
-            const test: Log = logMessageHandle(data, topic)
-            await addLog(test)
+            const log: Log = logMessageHandle(data, topic)
+            logData.push(log)
             break;
 
         case "CHK":
@@ -45,18 +56,18 @@ async function main(data: any, topic: string) {
 
 }
 
-const addLog = async (log: Log) => {
-    if (log.taskId) {
-        try {
-            const res = await prisma.log.create({
-                data: log
-            })
-            subLogger.info(JSON.stringify(res))
-        }
-        catch (e) {
-            subLogger.error(JSON.stringify(log))
-            subLogger.error(JSON.stringify(e))
-        }
+const addLogs = async (logs: Log[]) => {
+    try {
+        const res = await prisma.log.createMany({
+            data: logs
+        })
+        subLogger.info(JSON.stringify(res))
+    }
+    catch (e) {
+        subLogger.error(JSON.stringify(logs))
+        subLogger.error(JSON.stringify(e))
+        console.log(e)
+
     }
 }
 
@@ -135,7 +146,7 @@ const checkMessageHandle = (message: String, topic: String) => {
 
 
 client.on("connect", function () {
-    console.log("Sub connected");
+    console.log("sub connected");
 })
 
 client.on('message', messsageReceived);
@@ -148,36 +159,15 @@ client.on('error', (err) => {
     subLogger.error(JSON.stringify(err))
 })
 
-const publish = (topic: string, msg: string) => {
-    if (client.connected == true) {
-        client.publish(topic, msg, (err) => {
-            if(err instanceof Error){
-                subLogger.error(JSON.stringify(err))
-            }
-        });
+setInterval(() => {
+    const logs: Log[] = logData;
+    logData = []
+    if (logs.length !== 0) {
+        addLogs(logs)
+        n += logs.length
+        console.log(n)
     }
-}
-
-
-process.env.NODE_ENV !== "production" &&
-    setInterval(() => {
-        const d = new Date();
-        let time = Math.trunc(d.getTime() / 1000);
-        const obj1 = `LOG,${Math.floor(Math.random() * 10)},${time},test,${Math.floor(Math.random() * 10000)},`
-        const obj2 = `LOG,${Math.floor(Math.random() * 10)},${time},test,${Math.floor(Math.random() * 10000)},`
-        const obj3 = `LOG,${Math.floor(Math.random() * 10)},${time},test,${Math.floor(Math.random() * 10000)},`
-        const obj4 = `LOG,${Math.floor(Math.random() * 10)},${time},test,${Math.floor(Math.random() * 10000)},`
-        const obj5 = `LOG,${Math.floor(Math.random() * 10)},${time},test,${Math.floor(Math.random() * 10000)},`
-
-        publish('ToServer/AAAAAA', obj1);
-        publish('ToServer/BBBBBB', obj2);
-        publish('ToServer/CCCCC', obj3);
-        publish('ToServer/DDDDD', obj4);
-        publish('ToServer/EEEEE', obj5);
-
-
-    }, 50);
-
+}, 100)
 
 
 

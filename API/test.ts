@@ -4,9 +4,16 @@ import config from './src/utils/config'
 import { subLogger } from './src/utils/logger';
 import { Prisma } from '@prisma/client'
 import winston from 'winston';
+import fs from 'fs';
 
-const prisma = new PrismaClient()
-var client = mqtt.connect(config.MQTT)
+const client = mqtt.connect(`mqtts://${config.MQTT}`, {
+    port: 8883,
+    keepalive: 10,
+    ca: fs.readFileSync('certs/ca.crt'),
+    cert: fs.readFileSync('certs/server.crt'),
+    key: fs.readFileSync('certs/server.key'),
+    rejectUnauthorized: false,
+})
 
 const logger1 = winston.createLogger({
     level: 'info',
@@ -26,6 +33,7 @@ const logger2 = winston.createLogger({
 
 let messageSent = 0;
 let messageReceived = 0;
+const limit = 100000
 
 export type Log = {
     taskId: number,
@@ -68,7 +76,7 @@ client.on('error', (err) => {
 
 const publish = (topic: string, msg: string) => {
     if (client.connected == true) {
-        if (messageSent === 1000000) {
+        if (messageSent === limit) {
             return;
         }
         client.publish(topic, msg, (err) => {
@@ -93,7 +101,7 @@ function generateRandomString(length: number) {
     return result;
 }
 
-const deviceList = Array.from({ length: 50 }, () => generateRandomString(6));
+const deviceList = Array.from({ length: 10000 }, () => generateRandomString(6));
 
 
 setInterval(() => {
@@ -102,7 +110,7 @@ setInterval(() => {
     const objectList = Array.from({ length: 40 }, () => `LOG,${Math.floor(Math.random() * 10)},${time},test,${Math.floor(Math.random() * 10000)},`);
 
     deviceList.forEach(device => publish(`ToServer/${device}`, objectList[Math.floor(Math.random() * 40)]))
-}, 50);
+}, 100);
 
 
 
