@@ -1,18 +1,16 @@
 import { PrismaClient } from '@prisma/client'
-import mqtt from 'mqtt'
+const MQTT = require("async-mqtt");
 import config from './src/utils/config'
 import { subLogger } from './src/utils/logger';
 import { Prisma } from '@prisma/client'
 import winston from 'winston';
 import fs from 'fs';
 
-const client = mqtt.connect(`mqtts://${config.MQTT}`, {
-    port: 8883,
-    keepalive: 10,
-    ca: fs.readFileSync('certs/ca.crt'),
-    cert: fs.readFileSync('certs/server.crt'),
-    key: fs.readFileSync('certs/server.key'),
-    rejectUnauthorized: false,
+const { combine, timestamp, printf, json, align } = winston.format;
+
+
+const client = MQTT.connect(`mqtt://170.64.187.153`, {
+    port: 1883,
 })
 
 const logger1 = winston.createLogger({
@@ -20,7 +18,14 @@ const logger1 = winston.createLogger({
     transports: [
         new winston.transports.Console(),
         new winston.transports.File({ filename: 'messageSent.log' })
-    ]
+    ],
+    format: combine(
+        timestamp({
+            format: 'YYYY-MM-DD hh:mm:ss.SSS A',
+        }),
+        align(),
+        printf((info: any) => `[${info.timestamp}] : ${info.message}`)
+    ),
 });
 
 const logger2 = winston.createLogger({
@@ -29,11 +34,19 @@ const logger2 = winston.createLogger({
         new winston.transports.Console(),
         new winston.transports.File({ filename: 'messageReceived.log' })
     ]
+    ,
+    format: combine(
+        timestamp({
+            format: 'YYYY-MM-DD hh:mm:ss.SSS A',
+        }),
+        align(),
+        printf((info: any) => `[${info.timestamp}] : ${info.message}`)
+    ),
 });
 
 let messageSent = 0;
 let messageReceived = 0;
-const limit = 100000
+const limit = 1900000
 
 export type Log = {
     taskId: number,
@@ -48,8 +61,6 @@ export type Log = {
 
 function messsageReceived(topic: string, message: any, packet: string) {
     try {
-        const data = message.toString();
-        subLogger.info(`${topic} - ${data}`)
         messageReceived++
         logger2.info(`${topic} - ${message}`)
         console.log(messageReceived, "messageRecevied")
@@ -64,29 +75,36 @@ client.on("connect", function () {
     console.log("Sub connected");
 })
 
-client.on('message', messsageReceived);
+//  client.on('message', messsageReceived);
 
 
-client.subscribe('ToServer/#');
+//  client.subscribe('ToServer/#',{qos:0});
 
 
-client.on('error', (err) => {
+client.on('error', (err: any) => {
     subLogger.error(JSON.stringify(err))
 })
 
-const publish = (topic: string, msg: string) => {
-    if (client.connected == true) {
-        if (messageSent === limit) {
-            return;
-        }
-        client.publish(topic, msg, (err) => {
-            messageSent++;
-            logger1.info(`${topic} - ${msg}`)
-            console.log(messageSent, "messageSent")
-            if (err instanceof Error) {
-                subLogger.error(JSON.stringify(err))
+const publish = async (topic: string, message: string) => {
+    try {
+        if (client.connected == true) {
+            if (messageSent >= limit) {
+                return;
             }
-        });
+            messageSent++;
+
+            const newMsg = `${messageSent} - ${message}`
+
+            await client.publish(topic,message , {
+                qos: 0
+            })
+
+            logger1.info(`${topic} - ${message}`)
+
+            console.log(messageSent, "messageSent")
+        }
+    } catch (e) {
+        console.group(e)
     }
 }
 
@@ -101,7 +119,7 @@ function generateRandomString(length: number) {
     return result;
 }
 
-const deviceList = Array.from({ length: 10000 }, () => generateRandomString(6));
+const deviceList = Array.from({ length: 12000 }, () => generateRandomString(6));
 
 
 setInterval(() => {
@@ -109,8 +127,12 @@ setInterval(() => {
     let time = Math.trunc(d.getTime() / 1000);
     const objectList = Array.from({ length: 40 }, () => `LOG,${Math.floor(Math.random() * 10)},${time},test,${Math.floor(Math.random() * 10000)},`);
 
-    deviceList.forEach(device => publish(`ToServer/${device}`, objectList[Math.floor(Math.random() * 40)]))
-}, 100);
+
+    for (const device of deviceList) {
+        publish(`ToServer/${device}`, objectList[Math.floor(Math.random() * 40)])
+    }
+
+}, 1000);
 
 
 

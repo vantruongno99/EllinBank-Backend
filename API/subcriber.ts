@@ -9,12 +9,13 @@ import fs from 'fs';
 const prisma = new PrismaClient()
 
 const client = mqtt.connect(`mqtts://${config.MQTT}`, {
-    port: 8883,
-    keepalive: 10,
-    ca: fs.readFileSync('certs/ca.crt'),
-    cert: fs.readFileSync('certs/server.crt'),
-    key: fs.readFileSync('certs/server.key'),
-    rejectUnauthorized: false,
+    port: 1883,
+    // port: 8883,
+    // keepalive: 10,
+    // ca: fs.readFileSync('certs/ca.crt'),
+    // cert: fs.readFileSync('certs/server.crt'),
+    // key: fs.readFileSync('certs/server.key'),
+    // rejectUnauthorized: false,
 })
 
 export type Log = {
@@ -23,7 +24,6 @@ export type Log = {
     logType: string,
     logValue: number,
     logNote: string,
-    dateTimeUTC: Date,
     deviceId: string
 }
 
@@ -58,10 +58,10 @@ async function main(data: any, topic: string) {
 
 const addLogs = async (logs: Log[]) => {
     try {
-        const res = await prisma.log.createMany({
-            data: logs
-        })
-        subLogger.info(JSON.stringify(res))
+        const values = logs.map((log) => `('${log.timestampUTC}', '${log.logNote}', '${log.taskId}', '${log.deviceId}',' ${log.logValue}', '${log.logType}')`)
+        await prisma.$queryRawUnsafe(`INSERT INTO "Log" (timestampUTC,logNote,taskId,deviceId,logValue,logType) 
+        VALUES 
+         ${values.join(',')}`)
     }
     catch (e) {
         subLogger.error(JSON.stringify(logs))
@@ -105,7 +105,7 @@ const addCheck = async (check: Check) => {
     }
 }
 
-function messsageReceived(topic: string, message: any, packet: string) {
+function messsageReceived(topic: string, message: any, packet: any) {
     try {
         const data = message.toString();
         subLogger.info(`${topic} - ${data}`)
@@ -130,7 +130,6 @@ const logMessageHandle = (message: String, topic: String) => {
         logType: value[3],
         logValue: parseFloat(value[4]),
         logNote: value[5],
-        dateTimeUTC: new Date(),
         deviceId
     })
 }
@@ -152,7 +151,7 @@ client.on("connect", function () {
 client.on('message', messsageReceived);
 
 
-client.subscribe('ToServer/#');
+client.subscribe('ToServer/#', { qos: 0 });
 
 
 client.on('error', (err) => {
@@ -167,7 +166,7 @@ setInterval(() => {
         n += logs.length
         console.log(n)
     }
-}, 100)
+}, 1000)
 
 
 
