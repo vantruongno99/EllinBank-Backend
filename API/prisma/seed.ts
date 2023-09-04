@@ -37,8 +37,6 @@ async function main() {
                 name: "test"
             }]
         })
-        console.log(newDevice)
-
     }
     catch (e: any) {
         console.log(e)

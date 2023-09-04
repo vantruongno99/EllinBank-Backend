@@ -1,7 +1,7 @@
 import { RegisterInput, LoginInput } from "../models/auth.modal"
 import bcrypt from 'bcrypt'
 import { prisma } from "../../prisma/prismaClient"
-import { UserUpdate } from "../models/user.modal"
+import { UserEditInput, UserUpdate } from "../models/user.modal"
 import errorHandler from "../utils/errorHandler"
 
 const createUser = async (register: RegisterInput) => {
@@ -94,5 +94,29 @@ const deleteUser = async (username: string): Promise<void> => {
   }
 }
 
+const editUser = async (username: string, input: UserEditInput) => {
 
-export default { createUser, findAllUser, findUserByUsername, deleteUser }
+  if (username === "super") {
+    delete input.role
+  }
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: {
+        username: username
+      },
+      data: {
+        ...input
+      }
+    })
+
+    return updatedUser
+  }
+  catch (e: any) {
+    errorHandler(e)
+  }
+}
+
+
+
+export default { createUser, findAllUser, findUserByUsername, deleteUser, editUser }

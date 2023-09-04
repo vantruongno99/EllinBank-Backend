@@ -8,9 +8,12 @@ import fs from 'fs';
 
 const prisma = new PrismaClient()
 
-const client = mqtt.connect(`mqtts://${config.MQTT}`, {
+const client = mqtt.connect({
+    host: config.MQTT,
     port: 1883,
+    protocol: "mqtt"
     // port: 8883,
+    //protocol :"mqtts",
     // keepalive: 10,
     // ca: fs.readFileSync('certs/ca.crt'),
     // cert: fs.readFileSync('certs/server.crt'),

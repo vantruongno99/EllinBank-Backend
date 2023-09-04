@@ -5,13 +5,17 @@ class MqttHandler {
     mqttClient: any;
     constructor() {
 
-        this.mqttClient = mqtt.connect( `mqtts://${config.MQTT}`,{
-            port: 8883,
-            keepalive: 10,
-            ca: fs.readFileSync('certs/ca.crt'),
-            cert: fs.readFileSync('certs/server.crt'),
-            key: fs.readFileSync('certs/server.key'),
-            rejectUnauthorized: false,
+        this.mqttClient =  mqtt.connect({
+            host: config.MQTT,
+            port: 1883,
+            protocol: "mqtt"
+            // port: 8883,
+            //protocol :"mqtts",
+            // keepalive: 10,
+            // ca: fs.readFileSync('certs/ca.crt'),
+            // cert: fs.readFileSync('certs/server.crt'),
+            // key: fs.readFileSync('certs/server.key'),
+            // rejectUnauthorized: false,
         })
         // Mqtt error calback
         this.mqttClient.on('error', (err: any) => {

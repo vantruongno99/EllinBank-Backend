@@ -1,6 +1,6 @@
 import { Request, Response, Router } from 'express';
 import AuthService from '../services/auth.service';
-import { LoginInput , PasswordChangeInput } from '../models/auth.modal';
+import { LoginInput, PasswordChangeInput } from '../models/auth.modal';
 import middleware from "../utils/middleware"
 
 require('express-async-errors');
@@ -18,9 +18,15 @@ authRouter.get('/', middleware.userExtractor, async (req: Request, res: Response
 })
 
 
-authRouter.post('/changepassword',  middleware.userExtractor ,async (req: Request, res: Response) => {
+authRouter.post('/changepassword', middleware.userExtractor, async (req: Request, res: Response) => {
     const input: PasswordChangeInput = req.body
-    await AuthService.changePassword(input)
+    await AuthService.resetPassword(input)
+    res.status(200).json()
+})
+
+authRouter.post('/adminresetpassword', middleware.userExtractor, middleware.adminRequire, async (req: Request, res: Response) => {
+    const input: PasswordChangeInput = req.body
+    await AuthService.adminResetPassword(input)
     res.status(200).json()
 })
 

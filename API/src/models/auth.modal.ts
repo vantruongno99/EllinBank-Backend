@@ -15,3 +15,8 @@ export interface LoginInput {
 export interface PasswordChangeInput extends LoginInput{
     newPassword : string
 }
+
+export interface AdminPasswordChangeInput {
+    username : string;
+    newPassword :string;
+}

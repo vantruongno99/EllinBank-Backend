@@ -1,4 +1,4 @@
-import { LoginInput, PasswordChangeInput } from "../models/auth.modal"
+import { LoginInput, PasswordChangeInput, AdminPasswordChangeInput } from "../models/auth.modal"
 import bcrypt from 'bcrypt'
 import { prisma } from "../../prisma/prismaClient"
 import tokenGenerator from "../utils/tokenGenerator"
@@ -25,7 +25,7 @@ const login = async (input: LoginInput) => {
       email: true,
       username: true,
       hashedPassword: true,
-      role : true
+      role: true
     },
   });
 
@@ -45,7 +45,7 @@ const login = async (input: LoginInput) => {
 }
 
 
-const changePassword = async (input: PasswordChangeInput) => {
+const resetPassword = async (input: PasswordChangeInput) => {
   const username = input.username?.trim();
   const password = input.password?.trim();
   const newPassword = input.newPassword?.trim()
@@ -106,6 +106,67 @@ const changePassword = async (input: PasswordChangeInput) => {
   }
 }
 
+const adminResetPassword = async (input: AdminPasswordChangeInput) => {
+  const username = input.username?.trim();
+  const newPassword = input.newPassword?.trim()
+
+  if (!username) {
+    throw ({ name: 'ValidationError', message: " username is blank" });
+  }
 
 
-export default { login, changePassword }
+  if (!newPassword) {
+    throw ({ name: 'ValidationError', message: " newPassword is blank" });
+  }
+
+  if(username === "super")
+  {
+    throw ({ name: 'ValidationError', message: "For super , please change username in Profile" });
+  }
+
+
+
+  const user = await prisma.user.findUnique({
+    where: {
+      username,
+    },
+    select: {
+      email: true,
+      username: true,
+      hashedPassword: true
+    },
+  });
+
+  if (!user) {
+    throw ({ name: 'ValidationError', message: ` user: does not exist ` });
+
+  }
+
+
+  const saltRounds = 10
+  const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+  try {
+    await prisma.user.update({
+      where: {
+        username
+      },
+      data: {
+        hashedPassword
+      }
+    });
+  }
+
+  catch (e: any) {
+    if (e.meta.target) {
+      throw ({ name: 'ValidationError', message: `${e.meta.target} is not unique` });
+    }
+
+  }
+}
+
+
+
+
+
+
+export default { login, resetPassword, adminResetPassword }

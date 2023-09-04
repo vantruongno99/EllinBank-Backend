@@ -15,3 +15,9 @@ export interface UserUpdate {
    role? : string,
 }
 
+export interface UserEditInput {
+    email?: string;
+    role? : string,
+    company? : string
+}
+
