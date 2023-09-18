@@ -1,6 +1,7 @@
 import { Request, Response, Router } from 'express';
 import taskService from '../services/task.service';
 import middleware from "../utils/middleware"
+import { LogQuery } from '../models/task.model';
 
 require('express-async-errors');
 
@@ -41,11 +42,9 @@ taskRouter.get('/:taskId', async (req: Request, res: Response) => {
 
 taskRouter.get('/:taskId/logs', async (req: Request, res: Response) => {
     const taskId = parseInt(req.params.taskId)
-    const DeviceListQuery = req.query.deviceList as string
-    const deviceList = DeviceListQuery ? JSON.parse(decodeURIComponent(DeviceListQuery)) : undefined
-    const type = req.query.type as string
-    const sensors = await taskService.getLogs(taskId, type, deviceList)
-    res.status(200).json(sensors)
+    const query: LogQuery = req.query
+    const logs = await taskService.getLogs(taskId,query)
+    res.status(200).json(logs)
 })
 
 

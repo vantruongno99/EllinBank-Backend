@@ -7,15 +7,7 @@ services:
       - "3003:3003"
     volumes:
       - .:/host
-    links:
-      - redis
+      - ./dockerLogs:/app/logs
     environment:
       - NODE_ENV=production
     restart: always
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-  redis:
-    container_name: redis
-    image: 'redis:alpine'
-    restart: always
-      

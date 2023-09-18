@@ -14,3 +14,9 @@ export interface TaskEditInput {
     comment : string,
 }
 
+export interface LogQuery {
+    deviceId? : string[],
+    from? : string,
+    to? : string,
+    type? : string
+}

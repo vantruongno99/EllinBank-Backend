@@ -166,8 +166,6 @@ setInterval(() => {
     logData = []
     if (logs.length !== 0) {
         addLogs(logs)
-        n += logs.length
-        console.log(n)
     }
 }, 1000)
 

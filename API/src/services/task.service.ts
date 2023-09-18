@@ -1,9 +1,21 @@
-import { TaskEditInput, TaskInput } from "../models/task.model"
+import { LogQuery, TaskEditInput, TaskInput } from "../models/task.model"
 import { prisma } from "../../prisma/prismaClient"
 import { ConfigSend } from "../models/mqtt.modals";
 import mqttService from "./mqtt.service";
 import errorHandler from "../utils/errorHandler"
 import redisClient from "../redis/redisClient";
+
+declare global {
+  interface BigInt {
+    toJSON(): string;
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore: Unreachable code error
+BigInt.prototype.toJSON = function (): number {
+  return Number(this);
+};
 
 
 const createTask = async (task: TaskInput, user: string | undefined) => {
@@ -479,42 +491,62 @@ const resumeTask = async (taskId: number, username: string | undefined) => {
   }
 }
 
-const getLogs = async (taskId: number, type?: string, deviceList?: string[]) => {
+const getLogs = async (taskId: number, query: LogQuery) => {
+  const type = query.type ? query.type : null
+  const deviceList = query.deviceId ? query.deviceId : null
+  const from = query.from ? parseInt(query.from) : null
+  const to = query.to ? parseInt(query.to) : null
+  const cacheEligible = !deviceList && !from && !to
+
+
   try {
-    const cacheResults = await redisClient.get(`${taskId}${type ? `-${type}` : ''}${deviceList ? `-${deviceList}` : ''}`);
-    if (cacheResults) {
-      return JSON.parse(cacheResults);
-    }
-
-    else {
-      const task = await prisma.task.findFirstOrThrow({
-        where: {
-          id: taskId
-        }
-      })
-
-      const logs = await prisma.log.findMany({
-        where: {
-          taskId: taskId,
-          ...(type && { logType: type }),
-          ...(deviceList && {
-            deviceId: {
-              in: deviceList
-            }
-          }),
-        },
-        orderBy: [
-          {
-            timestampUTC: 'asc',
-          },
-
-        ],
-      })
-      if (task.status === "COMPLETED") {
-        await redisClient.set(`${taskId}-${type}`, JSON.stringify(logs));
+    if (cacheEligible) {
+      const cacheResults = await redisClient.get(`${taskId}-${type ? type : ''}`);
+      if (cacheResults) {
+        return JSON.parse(cacheResults);
       }
-      return logs
     }
+
+    const task = await prisma.task.findFirstOrThrow({
+      where: {
+        id: taskId
+      }
+    })
+
+    const logs = await prisma.log.findMany({
+      where: {
+        taskId: taskId,
+        ...(type && { logType: type }),
+        ...(deviceList && {
+          deviceId: {
+            in: deviceList
+          }
+        }),
+        ...(from &&
+        {
+          timestampUTC: {
+            gte: from
+          }
+        }),
+        ...(to &&
+        {
+          timestampUTC: {
+            lte: to
+          }
+        }),
+
+      },
+      orderBy: [
+        {
+          timestampUTC: 'asc',
+        },
+
+      ],
+    })
+    if (task.status === "COMPLETED" && cacheEligible) {
+      await redisClient.set((`${taskId}-${type ? type : ''}`), JSON.stringify(logs));
+    }
+    return logs
   }
 
   catch (e: any) {
