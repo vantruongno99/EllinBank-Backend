@@ -1,9 +1,10 @@
-import { LogQuery, TaskEditInput, TaskInput } from "../models/task.model"
+import { LogOutput, LogQuery, Task, TaskEditInput, TaskInput } from "../models/task.model"
 import { prisma } from "../../prisma/prismaClient"
 import { ConfigSend } from "../models/mqtt.modals";
 import mqttService from "./mqtt.service";
 import errorHandler from "../utils/errorHandler"
 import redisClient from "../redis/redisClient";
+import { Device_Task } from ".prisma/client";
 
 declare global {
   interface BigInt {
@@ -18,7 +19,7 @@ BigInt.prototype.toJSON = function (): number {
 };
 
 
-const createTask = async (task: TaskInput, user: string | undefined) => {
+const createTask = async (task: TaskInput, user: string | undefined): Promise<Task | undefined> => {
   const name = task.name.trim()
   const startTime = task.startTime
   const endTime = task.endTime
@@ -58,7 +59,7 @@ const createTask = async (task: TaskInput, user: string | undefined) => {
   }
 }
 
-const assignSensor = async (taskId: number, deviceId: string) => {
+const assignSensor = async (taskId: number, deviceId: string): Promise<Device_Task | undefined> => {
   if (!taskId) {
     throw ({ name: 'ValidationError', message: { taskId: ["can't be blank"] } });
   }
@@ -111,7 +112,7 @@ const assignSensor = async (taskId: number, deviceId: string) => {
   }
 }
 
-const unassignSensor = async (taskId: number, deviceId: string) => {
+const unassignSensor = async (taskId: number, deviceId: string): Promise<void> => {
   if (!taskId) {
     throw ({ name: 'ValidationError', message: { taskId: ["can't be blank"] } });
   }
@@ -129,6 +130,7 @@ const unassignSensor = async (taskId: number, deviceId: string) => {
         }
       }
     })
+
     mqttService.stopTask(deviceId, taskId);
 
     await prisma.device.update({
@@ -141,6 +143,13 @@ const unassignSensor = async (taskId: number, deviceId: string) => {
       },
     })
 
+    await prisma.log.deleteMany({
+      where: {
+        taskId: taskId,
+        deviceId: deviceId
+      }
+    })
+
   }
   catch (e: any) {
     errorHandler(e)
@@ -148,7 +157,7 @@ const unassignSensor = async (taskId: number, deviceId: string) => {
   }
 }
 
-const updateTask = async (taskId: string, input: TaskEditInput) => {
+const updateTask = async (taskId: string, input: TaskEditInput): Promise<Task | undefined> => {
 
   const id = parseInt(taskId)
 
@@ -196,7 +205,8 @@ const updateTask = async (taskId: string, input: TaskEditInput) => {
   }
 }
 
-const findAllTask = async (company?: string) => {
+const findAllTask = async (option?: any): Promise<Task[] | undefined> => {
+  const company = option?.company
   const tasks = await prisma.task.findMany({
     where: {
       ...(company ? { company: company } : {})
@@ -205,7 +215,7 @@ const findAllTask = async (company?: string) => {
   return tasks;
 }
 
-const deleteTask = async (taskId: number) => {
+const deleteTask = async (taskId: number): Promise<void> => {
   try {
 
     const task = await prisma.task.findFirstOrThrow({
@@ -246,15 +256,12 @@ const deleteTask = async (taskId: number) => {
 
     }
 
-
-
-    const deleteTask = await prisma.task.delete({
+    await prisma.task.delete({
       where: {
         id: taskId,
       },
     })
 
-    return deleteTask
   }
   catch (e: any) {
     errorHandler(e)
@@ -262,8 +269,12 @@ const deleteTask = async (taskId: number) => {
 
 }
 
-const findTask = async (taskId: number) => {
+const findTask = async (taskId: number): Promise<Task | undefined> => {
   try {
+    const cacheResults = await redisClient.get(`${taskId}`);
+    if (cacheResults) {
+      return JSON.parse(cacheResults);
+    }
     const task = await prisma.task.findUniqueOrThrow({
       where: {
         id: taskId,
@@ -276,6 +287,10 @@ const findTask = async (taskId: number) => {
         }
       },
     })
+    if (task.status === "COMPLETED") {
+      await redisClient.set((`${taskId}`), JSON.stringify(task));
+
+    }
     return task
   }
   catch (e: any) {
@@ -284,9 +299,8 @@ const findTask = async (taskId: number) => {
   }
 }
 
-const completeTask = async (taskId: number, username: string | undefined) => {
+const completeTask = async (taskId: number, username: string | undefined): Promise<Task | undefined> => {
   try {
-
     await prisma.task.findFirstOrThrow({
       where: {
         id: taskId,
@@ -332,10 +346,6 @@ const completeTask = async (taskId: number, username: string | undefined) => {
     for (const deviceId of deviceList) {
       await mqttService.stopTask(deviceId, taskId)
     }
-
-
-
-
     await prisma.device.updateMany({
       where: {
         id: {
@@ -347,8 +357,6 @@ const completeTask = async (taskId: number, username: string | undefined) => {
         assigned: false
       },
     })
-
-
     return task
   }
   catch (e: any) {
@@ -356,7 +364,7 @@ const completeTask = async (taskId: number, username: string | undefined) => {
   }
 }
 
-const pasueTask = async (taskId: number, username: string | undefined) => {
+const pasueTask = async (taskId: number, username: string | undefined): Promise<void> => {
   try {
 
     await prisma.task.findFirstOrThrow({
@@ -417,16 +425,13 @@ const pasueTask = async (taskId: number, username: string | undefined) => {
         status: "PAUSED",
       },
     })
-
-
-    return task
   }
   catch (e: any) {
     errorHandler(e)
   }
 }
 
-const resumeTask = async (taskId: number, username: string | undefined) => {
+const resumeTask = async (taskId: number, username: string | undefined): Promise<void> => {
   try {
 
     await prisma.task.findFirstOrThrow({
@@ -484,20 +489,18 @@ const resumeTask = async (taskId: number, username: string | undefined) => {
         status: "RUNNING",
       },
     })
-    return task
   }
   catch (e: any) {
     errorHandler(e)
   }
 }
 
-const getLogs = async (taskId: number, query: LogQuery) => {
+const getLogs = async (taskId: number, query: LogQuery): Promise<any[] | undefined> => {
   const type = query.type ? query.type : null
-  const deviceList = query.deviceId ? query.deviceId : null
+  const deviceList: string[] = query.deviceList ? JSON.parse(query.deviceList) : null
   const from = query.from ? parseInt(query.from) : null
   const to = query.to ? parseInt(query.to) : null
   const cacheEligible = !deviceList && !from && !to
-
 
   try {
     if (cacheEligible) {
@@ -513,39 +516,30 @@ const getLogs = async (taskId: number, query: LogQuery) => {
       }
     })
 
-    const logs = await prisma.log.findMany({
-      where: {
-        taskId: taskId,
-        ...(type && { logType: type }),
-        ...(deviceList && {
-          deviceId: {
-            in: deviceList
-          }
-        }),
-        ...(from &&
-        {
-          timestampUTC: {
-            gte: from
-          }
-        }),
-        ...(to &&
-        {
-          timestampUTC: {
-            lte: to
-          }
-        }),
+    const logs = await prisma.$queryRawUnsafe<LogOutput[]>(`
+        SELECT Log.dateTimeUTC,Log.timestampUTC,Log.DeviceId,Device.name AS deviceName,Log.TaskId,Task.name AS taskName,Log.logType,Log.logValue,Log.logNote
+        FROM Log
+        INNER JOIN Device
+        ON Log.DeviceId = Device.Id
+        INNER JOIN Task
+        ON Log.TaskId = Task.Id 
+        WHERE
+        1 = 1 
+        AND Log.taskId = ${taskId}
+        ${type ? `AND logType = '${type}'` : ''}
+        ${deviceList ? `AND deviceId IN (${deviceList.map(device => `'${device}'`)})` : ''}
+        ${from ? `AND timestampUTC > '${from}'` : ''}
+        ${to ? `AND timestampUTC < '${to}'` : ''}
+        `
+    )
 
-      },
-      orderBy: [
-        {
-          timestampUTC: 'asc',
-        },
 
-      ],
-    })
+
     if (task.status === "COMPLETED" && cacheEligible) {
       await redisClient.set((`${taskId}-${type ? type : ''}`), JSON.stringify(logs));
     }
+
+
     return logs
   }
 

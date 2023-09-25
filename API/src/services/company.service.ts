@@ -4,10 +4,11 @@ import { ConfigSend } from "../models/mqtt.modals";
 import mqttService from "./mqtt.service";
 import errorHandler from "../utils/errorHandler"
 import redisClient from "../redis/redisClient";
-import { CompanyInput, CompanyQueryOption } from "../models/company.modal";
+import { CompanyInput, CompanyOutput, CompanyQueryOption } from "../models/company.modal";
+import { User } from "../models/user.modal";
 
 
-const createCompany = async (company: CompanyInput) => {
+const createCompany = async (company: CompanyInput): Promise<CompanyOutput|undefined> => {
 
   try {
     const newCompany = await prisma.company.create({
@@ -23,7 +24,7 @@ const createCompany = async (company: CompanyInput) => {
   }
 }
 
-const getAllCompany = async () => {
+const getAllCompany = async (): Promise<CompanyOutput[]|undefined> => {
   try {
     return await prisma.company.findMany()
   }
@@ -33,7 +34,7 @@ const getAllCompany = async () => {
 }
 
 
-const getCompany = async (name: string) => {
+const getCompany = async (name: string): Promise<CompanyOutput|undefined> => {
   try {
 
     const company = await prisma.company.findFirstOrThrow({
@@ -53,7 +54,7 @@ const getCompany = async (name: string) => {
   }
 }
 
-const getUser = async (name: string) => {
+const getUser = async (name: string) : Promise<User[]|undefined> => {
   try {
     const company = await prisma.company.findFirstOrThrow({
       where: {
@@ -72,7 +73,7 @@ const getUser = async (name: string) => {
   }
 }
 
-const getAllCompanyData = async (name: string, option: CompanyQueryOption) => {
+const getAllCompanyData = async (name: string, option: CompanyQueryOption):Promise<any> => {
 
   const from = option.from ? new Date(option.from) : null
   const to = option.to ? new Date(option.to) : null

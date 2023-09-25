@@ -1,10 +1,11 @@
-import { CalibrateSensorInput, DeviceInput, EditDeviceInput, SensorType } from "../models/device.modal"
+import { CalibrateSensorInput, Device, DeviceInput, EditDeviceInput, SensorType } from "../models/device.modal"
 import { prisma } from "../../prisma/prismaClient"
 import mqttService from "./mqtt.service"
 import errorHandler from "../utils/errorHandler"
+import { Task } from ".prisma/client"
 
 
-const createDevice = async (device: DeviceInput) => {
+const createDevice = async (device: DeviceInput): Promise<Device | undefined> => {
   const name = device.name.trim()
   const id = device.id.trim()
 
@@ -17,14 +18,14 @@ const createDevice = async (device: DeviceInput) => {
   }
 
   try {
-    const newSensor = await prisma.device.create({
+    const newDevice = await prisma.device.create({
       data: {
         id,
         name,
         updateUTC: new Date()
       }
     })
-    return newSensor
+    return newDevice
 
   }
   catch (e: any) {
@@ -34,7 +35,7 @@ const createDevice = async (device: DeviceInput) => {
   }
 }
 
-const editDevice = async (deviceId: string, device: EditDeviceInput) => {
+const editDevice = async (deviceId: string, device: EditDeviceInput): Promise<Device | undefined> => {
   const name = device.name
   const id = device.id
   if (!name) {
@@ -63,12 +64,12 @@ const editDevice = async (deviceId: string, device: EditDeviceInput) => {
   }
 }
 
-const findAllDevice = async () => {
+const findAllDevice = async (): Promise<Device[] | undefined> => {
   const sensors = await prisma.device.findMany({})
   return sensors;
 }
 
-const deleteDevice = async (deviceId: string) => {
+const deleteDevice = async (deviceId: string): Promise<void> => {
   try {
     const tasks = await prisma.task.findMany({
       where: {
@@ -111,7 +112,7 @@ const deleteDevice = async (deviceId: string) => {
 }
 
 
-const findDevice = async (deviceId: string) => {
+const findDevice = async (deviceId: string): Promise<Device | undefined> => {
   try {
     const sensor = await prisma.device.findUniqueOrThrow({
       where: {
@@ -126,9 +127,6 @@ const findDevice = async (deviceId: string) => {
       },
 
     })
-
-
-
     return sensor
   }
   catch (e: any) {
@@ -136,7 +134,7 @@ const findDevice = async (deviceId: string) => {
   }
 }
 
-const findAvaibleDevice = async () => {
+const findAvaibleDevice = async (): Promise<Device[] | undefined> => {
   const sensors = await prisma.device.findMany({
     where: {
       Task: {
@@ -155,7 +153,7 @@ const findAvaibleDevice = async () => {
   return sensors;
 }
 
-const calibrateSensor = async (deviceId: string, input: CalibrateSensorInput) => {
+const calibrateSensor = async (deviceId: string, input: CalibrateSensorInput): Promise<any> => {
   try {
     const device = await prisma.device.findUniqueOrThrow({
       where: {
@@ -173,7 +171,7 @@ const calibrateSensor = async (deviceId: string, input: CalibrateSensorInput) =>
   }
 }
 
-const readSensor = async (deviceId: string, sensorType: SensorType) => {
+const readSensor = async (deviceId: string, sensorType: SensorType) : Promise<any>=> {
   try {
     const device = await prisma.device.findUniqueOrThrow({
       where: {
@@ -191,7 +189,7 @@ const readSensor = async (deviceId: string, sensorType: SensorType) => {
   }
 }
 
-const pauseDevice = async (id: string) => {
+const pauseDevice = async (id: string) : Promise<Device|undefined> => {
   if (!id) {
     throw ({ name: 'ValidationError', message: { id: ["can't be blank"] } });
   }
@@ -247,7 +245,7 @@ const pauseDevice = async (id: string) => {
   }
 }
 
-const resumeDevice = async (id: string) => {
+const resumeDevice = async (id: string): Promise<Device|undefined> => {
   if (!id) {
     throw ({ name: 'ValidationError', message: { id: ["can't be blank"] } });
   }

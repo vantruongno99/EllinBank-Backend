@@ -1,10 +1,10 @@
 import { RegisterInput, LoginInput } from "../models/auth.modal"
 import bcrypt from 'bcrypt'
 import { prisma } from "../../prisma/prismaClient"
-import { UserEditInput, UserUpdate } from "../models/user.modal"
+import { User, UserEditInput, UserSelect, UserUpdate } from "../models/user.modal"
 import errorHandler from "../utils/errorHandler"
 
-const createUser = async (register: RegisterInput) => {
+const createUser = async (register: RegisterInput): Promise<User | undefined> => {
   const email: string = register.email.trim()
   const password: string = register.password.trim()
   const username: string = register.username.trim()
@@ -44,7 +44,7 @@ const createUser = async (register: RegisterInput) => {
   }
 }
 
-const findAllUser = async () => {
+const findAllUser = async (): Promise<UserSelect[] | undefined> => {
   const users = await prisma.user.findMany(
     {
       select: {
@@ -60,7 +60,7 @@ const findAllUser = async () => {
 }
 
 
-const findUserByUsername = async (username: string): Promise<any> => {
+const findUserByUsername = async (username: string): Promise<UserSelect> => {
 
   const user = await prisma.user.findUnique({
     where: {
@@ -94,7 +94,7 @@ const deleteUser = async (username: string): Promise<void> => {
   }
 }
 
-const editUser = async (username: string, input: UserEditInput) => {
+const editUser = async (username: string, input: UserEditInput): Promise<User | undefined> => {
 
   if (username === "super") {
     delete input.role

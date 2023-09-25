@@ -1,11 +1,11 @@
-import { LoginInput, PasswordChangeInput, AdminPasswordChangeInput } from "../models/auth.modal"
+import { LoginInput, PasswordChangeInput, AdminPasswordChangeInput, LoginResponse } from "../models/auth.modal"
 import bcrypt from 'bcrypt'
 import { prisma } from "../../prisma/prismaClient"
 import tokenGenerator from "../utils/tokenGenerator"
 
 
 
-const login = async (input: LoginInput) => {
+const login = async (input: LoginInput): Promise<LoginResponse> => {
   const username = input.username?.trim();
   const password = input.password?.trim();
 
@@ -45,7 +45,7 @@ const login = async (input: LoginInput) => {
 }
 
 
-const resetPassword = async (input: PasswordChangeInput) => {
+const resetPassword = async (input: PasswordChangeInput): Promise<void> => {
   const username = input.username?.trim();
   const password = input.password?.trim();
   const newPassword = input.newPassword?.trim()
@@ -106,7 +106,7 @@ const resetPassword = async (input: PasswordChangeInput) => {
   }
 }
 
-const adminResetPassword = async (input: AdminPasswordChangeInput) => {
+const adminResetPassword = async (input: AdminPasswordChangeInput): Promise<void> => {
   const username = input.username?.trim();
   const newPassword = input.newPassword?.trim()
 
@@ -119,8 +119,7 @@ const adminResetPassword = async (input: AdminPasswordChangeInput) => {
     throw ({ name: 'ValidationError', message: " newPassword is blank" });
   }
 
-  if(username === "super")
-  {
+  if (username === "super") {
     throw ({ name: 'ValidationError', message: "For super , please change username in Profile" });
   }
 

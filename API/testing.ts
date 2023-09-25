@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from './prisma/prismaClient'
 import { Log } from './subcriber'
 import taskService from './src/services/task.service'
+import { LogOutput } from './src/models/task.model'
 const a = async () => {
     try {
         const logs: any[] = await prisma.log.findMany({where:{
@@ -24,8 +25,40 @@ const b = async () => {
     }
 }
 
+const c = async () => {
+    const logType = "CH4"
+    const deviceList = ["Device-1","Device-2"]
+    const from = false
+    const to = false
+
+    try {
+        const logs = await prisma.$queryRawUnsafe<LogOutput[]>(`
+        SELECT Log.dateTimeUTC,Log.timestampUTC,Log.DeviceId,Device.name AS deviceName,Log.TaskId,Task.name AS taskName,Log.logType,Log.logValue,Log.logNote
+        FROM Log
+        INNER JOIN Device
+        ON Log.DeviceId = Device.Id
+        INNER JOIN Task
+        ON Log.TaskId = Task.Id 
+        WHERE
+        1 = 1 
+        ${logType ? `AND logType = '${logType}'` : ''}
+        ${deviceList ? `AND deviceId IN (${deviceList.map(device => `'${device}'`)})` : ''}
+        ${from ? `AND timestampUTC > '${from}'` : ''}
+        ${to ? `AND timestampUTC < '${to}'` : ''}
+        ORDER BY timestampUTC
+        `
+        )
+
+        console.log(logs)
+
+    }
+    catch (e) {
+        console.log(e)
+}
+}
 
 
 
 
-a()
+
+c()

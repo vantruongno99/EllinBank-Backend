@@ -11,7 +11,9 @@ const prisma = new PrismaClient()
 const client = mqtt.connect({
     host: config.MQTT,
     port: 1883,
-    protocol: "mqtt"
+    protocol: "mqtt",
+    clean : false,
+    clientId :  'mqttjs_' + Math.random().toString(16).substr(2, 8)
     // port: 8883,
     //protocol :"mqtts",
     // keepalive: 10,

@@ -53,7 +53,10 @@ taskRouter.get('/', async (req: Request, res: Response) => {
     if (req.user?.role === "user") {
         company = req.user.company
     }
-    const sensors = await taskService.findAllTask(company)
+    const option = {
+        company : company
+    }
+    const sensors = await taskService.findAllTask(option)
     res.status(200).json(sensors)
 })
 
