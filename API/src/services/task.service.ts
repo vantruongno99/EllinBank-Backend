@@ -512,35 +512,62 @@ const getLogs = async (taskId: number, query: LogQuery): Promise<any[] | undefin
 
     const task = await prisma.task.findFirstOrThrow({
       where: {
-        id: taskId
-      }
+        id: taskId,
+      },
+      include: {
+        Device: {
+          select: {
+            Device: true
+          }
+        }
+      },
     })
 
-    const logs = await prisma.$queryRawUnsafe<LogOutput[]>(`
-        SELECT Log.dateTimeUTC,Log.timestampUTC,Log.DeviceId,Device.name AS deviceName,Log.TaskId,Task.name AS taskName,Log.logType,Log.logValue,Log.logNote
-        FROM Log
-        INNER JOIN Device
-        ON Log.DeviceId = Device.Id
-        INNER JOIN Task
-        ON Log.TaskId = Task.Id 
-        WHERE
-        1 = 1 
-        AND Log.taskId = ${taskId}
-        ${type ? `AND logType = '${type}'` : ''}
-        ${deviceList ? `AND deviceId IN (${deviceList.map(device => `'${device}'`)})` : ''}
-        ${from ? `AND timestampUTC > '${from}'` : ''}
-        ${to ? `AND timestampUTC < '${to}'` : ''}
-        `
-    )
+    const currentDevices = task.Device.map(a => ({ id: a.Device.id, name: a.Device.name }))
 
+    const logs = await prisma.log.findMany({
+      where: {
+        taskId: taskId,
+        ...(type && { logType: type }),
+        ...(deviceList && {
+          deviceId: {
+            in: deviceList
+          }
+        }),
+        ...(from &&
+        {
+          timestampUTC: {
+            gte: from
+          }
+        }),
+        ...(to &&
+        {
+          timestampUTC: {
+            lte: to
+          }
+        }),
+      },
+      orderBy: [
+        {
+          timestampUTC: 'asc',
+        },
+      ],
+    })
+
+
+    const editLogs = logs.map(a => ({
+      ...a,
+      deviceName: currentDevices.find(b => b.id === a.deviceId)?.name,
+      taskName: task.name
+    }))
 
 
     if (task.status === "COMPLETED" && cacheEligible) {
-      await redisClient.set((`${taskId}-${type ? type : ''}`), JSON.stringify(logs));
+      await redisClient.set((`${taskId}-${type ? type : ''}`), JSON.stringify(editLogs));
     }
 
 
-    return logs
+    return editLogs
   }
 
   catch (e: any) {
