@@ -1,9 +1,8 @@
 import { PrismaClient } from '@prisma/client'
-import mqtt from 'mqtt'
+import * as mqtt from 'mqtt'
 import config from './src/utils/config'
 import { subLogger } from './src/utils/logger';
 import { Prisma } from '@prisma/client'
-import fs from 'fs';
 
 
 const prisma = new PrismaClient()
@@ -156,7 +155,7 @@ client.on("connect", function () {
 client.on('message', messsageReceived);
 
 
-client.subscribe('ToServer/#', { qos: 0 });
+client.subscribe('ToServer/#', { qos: 1 });
 
 
 client.on('error', (err) => {

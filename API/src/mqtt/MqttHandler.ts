@@ -36,7 +36,7 @@ class MqttHandler {
     // Sends a mqtt message to topic: mytopic
     async sendMessage(message: string, topic: string) {
         return new Promise((resolve, reject) => {
-            this.mqttClient.publish(topic, message, { qos: 2, retain: true }, (err: any, result: any) => {
+            this.mqttClient.publish(topic, message, { qos: 1, retain: true }, (err: any, result: any) => {
                 if (err) reject(err)
                 else resolve(result)
             })
