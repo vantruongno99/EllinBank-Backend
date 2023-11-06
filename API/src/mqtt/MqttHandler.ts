@@ -1,4 +1,4 @@
-import mqtt from 'mqtt';
+import * as mqtt from 'mqtt';
 import fs from 'fs';
 import config from '../utils/config'
 class MqttHandler {

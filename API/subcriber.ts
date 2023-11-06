@@ -1,11 +1,8 @@
-//Handle received log messages from mqtt broker 
-
 import { PrismaClient } from '@prisma/client'
-import mqtt from 'mqtt'
+import * as mqtt from 'mqtt'
 import config from './src/utils/config'
 import { subLogger } from './src/utils/logger';
 import { Prisma } from '@prisma/client'
-
 
 
 const prisma = new PrismaClient()
@@ -43,7 +40,6 @@ type Check = {
 let logData: Log[] = []
 let n: number = 0
 
-// Action depend on type of received message 
 async function main(data: any, topic: string) {
     const type = typeofMessage(data)
     switch (type) {
@@ -129,8 +125,6 @@ const typeofMessage = (message: String) => {
     return type
 }
 
-
-// convert log message to log object 
 const logMessageHandle = (message: String, topic: String) => {
     const value: string[] = message.split(',')
     const deviceId = topic.split('/')[1]
@@ -143,8 +137,6 @@ const logMessageHandle = (message: String, topic: String) => {
         deviceId
     })
 }
-
-// convert check message to log object 
 const checkMessageHandle = (message: String, topic: String) => {
     const value: string[] = message.split(',')
     const deviceId = topic.split('/')[1]
@@ -163,14 +155,13 @@ client.on("connect", function () {
 client.on('message', messsageReceived);
 
 
-client.subscribe('ToServer/#', { qos: 0 });
+client.subscribe('ToServer/#', { qos: 1 });
 
 
 client.on('error', (err) => {
     subLogger.error(JSON.stringify(err))
 })
 
-// the log objects are pushed to database for every 1 second 
 setInterval(() => {
     const logs: Log[] = logData;
     logData = []
