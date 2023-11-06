@@ -46,7 +46,7 @@ const logger2 = winston.createLogger({
 
 let messageSent = 0;
 let messageReceived = 0;
-const limit = 180000
+const limit = 100000
 
 export type Log = {
     taskId: number,
@@ -95,7 +95,7 @@ const publish = async (topic: string, message: string) => {
 
             const newMsg = `${messageSent} - ${message}`
 
-            await client.publish(topic,message)
+            await client.publish(   topic, message, { qos: 1, retain: true })
 
             logger1.info(`${topic} - ${message}`)
 
@@ -117,13 +117,13 @@ function generateRandomString(length: number) {
     return result;
 }
 
-const deviceList = Array.from({ length: 50 }, () => generateRandomString(6));
+const deviceList = Array.from({ length: 1000 }, () => generateRandomString(6));
 
 
 setInterval(() => {
     const d = new Date();
     let time = d.getTime() ;
-    const objectList = Array.from({ length: 40 }, () => `LOG,16,${time},test,${Math.floor(Math.random() * 10000)},`);
+    const objectList = Array.from({ length: 40 }, () => `LOG,24,${time},test,${Math.floor(Math.random() * 10000)},`);
 
 
     for (const device of deviceList) {

@@ -106,6 +106,7 @@ const resetPassword = async (input: PasswordChangeInput): Promise<void> => {
   }
 }
 
+// this function bypass user authorization
 const adminResetPassword = async (input: AdminPasswordChangeInput): Promise<void> => {
   const username = input.username?.trim();
   const newPassword = input.newPassword?.trim()

@@ -38,14 +38,16 @@ const c = async () => {
         INNER JOIN Device
         ON Log.DeviceId = Device.Id
         INNER JOIN Task
-        ON Log.TaskId = Task.Id 
+        ON Log.TaskId = Task.Id
         WHERE
-        1 = 1 
-        ${logType ? `AND logType = '${logType}'` : ''}
-        ${deviceList ? `AND deviceId IN (${deviceList.map(device => `'${device}'`)})` : ''}
-        ${from ? `AND timestampUTC > '${from}'` : ''}
-        ${to ? `AND timestampUTC < '${to}'` : ''}
-        ORDER BY timestampUTC
+        1 = 1
+        AND Log.taskId = 42
+        AND logType = 'RH'
+    
+    
+    
+    
+    
         `
         )
 

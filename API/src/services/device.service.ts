@@ -134,6 +134,8 @@ const findDevice = async (deviceId: string): Promise<Device | undefined> => {
   }
 }
 
+
+// Find all devices which dont have any running Task
 const findAvaibleDevice = async (): Promise<Device[] | undefined> => {
   const sensors = await prisma.device.findMany({
     where: {
@@ -153,6 +155,8 @@ const findAvaibleDevice = async (): Promise<Device[] | undefined> => {
   return sensors;
 }
 
+
+// Calibrate sensors inside device 
 const calibrateSensor = async (deviceId: string, input: CalibrateSensorInput): Promise<any> => {
   try {
     const device = await prisma.device.findUniqueOrThrow({
@@ -171,6 +175,7 @@ const calibrateSensor = async (deviceId: string, input: CalibrateSensorInput): P
   }
 }
 
+// Read sensors inside device 
 const readSensor = async (deviceId: string, sensorType: SensorType) : Promise<any>=> {
   try {
     const device = await prisma.device.findUniqueOrThrow({
@@ -189,6 +194,7 @@ const readSensor = async (deviceId: string, sensorType: SensorType) : Promise<an
   }
 }
 
+// Pause device in a running task
 const pauseDevice = async (id: string) : Promise<Device|undefined> => {
   if (!id) {
     throw ({ name: 'ValidationError', message: { id: ["can't be blank"] } });
@@ -245,6 +251,7 @@ const pauseDevice = async (id: string) : Promise<Device|undefined> => {
   }
 }
 
+// Resume device in a running task
 const resumeDevice = async (id: string): Promise<Device|undefined> => {
   if (!id) {
     throw ({ name: 'ValidationError', message: { id: ["can't be blank"] } });

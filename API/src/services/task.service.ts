@@ -6,6 +6,9 @@ import errorHandler from "../utils/errorHandler"
 import redisClient from "../redis/redisClient";
 import { Device_Task } from ".prisma/client";
 
+
+
+// This is because bigInt type does not have native support , need to convert bigInt to number 
 declare global {
   interface BigInt {
     toJSON(): string;

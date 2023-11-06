@@ -5,7 +5,7 @@ import errorHandler from "../utils/errorHandler"
 import { Stat } from "../models/stat.modal"
 
 
-
+// Send number of task , running tasks and devices based on user `s role 
 const getStat = async (company?: string) => {
     try {
         const numberOfDevices = await prisma.device.count({})

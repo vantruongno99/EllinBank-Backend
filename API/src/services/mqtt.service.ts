@@ -2,7 +2,7 @@ import { CalibrateSensorInput, DeviceInput, EditDeviceInput, SensorType } from "
 import { ConfigSend } from "../models/mqtt.modals";
 import mqttClient from "../mqtt/mqttClient";
 
-
+// Send task configure message to mqtt broker 
 const sendConfigure = async (deviceId: string, config: ConfigSend) => {
     try {
         await mqttClient.sendMessage(`CFG,REQ,${config.taskId},${config.msgTimeUTC},${config.startTimeUTC},${config.endTimeUTC},${config.logPeriod}`, `ToSensor/${deviceId}`);
@@ -11,6 +11,7 @@ const sendConfigure = async (deviceId: string, config: ConfigSend) => {
         console.log(e);
     }
 }
+// Send task resume message to mqtt broker
 const resumeTask = async (deviceId: string, taskId: number) => {
     try {
         await mqttClient.sendMessage(`CFG,RESUME,${taskId}`, `ToSensor/${deviceId}`);
@@ -19,6 +20,7 @@ const resumeTask = async (deviceId: string, taskId: number) => {
         console.log(e);
     }
 }
+// Send task pause message to mqtt broker
 const pauseTask = async (deviceId: string, taskId: number) => {
     try {
         await mqttClient.sendMessage(`CFG,PAUSE,${taskId}`, `ToSensor/${deviceId}`);
@@ -27,6 +29,7 @@ const pauseTask = async (deviceId: string, taskId: number) => {
         console.log(e);
     }
 }
+// Send task stop message to mqtt broker
 const stopTask = async (deviceId: string, taskId: number) => {
     try {
         await mqttClient.sendMessage(`CFG,STOP,${taskId}`, `ToSensor/${deviceId}`);
@@ -40,7 +43,7 @@ const pauseDevice = stopTask
 
 const resumeDevice = resumeTask
 
-
+// Send calibrate configure message to mqtt broker
 const calibrate = async (deviceId : string , config : CalibrateSensorInput) =>{
     try {
        const result =  await mqttClient.sendAndExpect(`CAL,${config.gasType}, ${config.calType}, ${config.calValue}`, `ToSensor/${deviceId}`)
@@ -51,7 +54,7 @@ const calibrate = async (deviceId : string , config : CalibrateSensorInput) =>{
     }
 
 }
-
+// Send calibrate read message to mqtt broker
 const read = async (deviceId : string , sensorType : SensorType) =>{
 
     try {

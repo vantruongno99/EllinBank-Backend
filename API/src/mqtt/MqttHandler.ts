@@ -8,7 +8,9 @@ class MqttHandler {
         this.mqttClient =  mqtt.connect({
             host: config.MQTT,
             port: 1883,
-            protocol: "mqtt"
+            protocol: "mqtt",
+            clean : false,
+            clientId :  'mqttjs_' + Math.random().toString(16).substr(2, 8),
             // port: 8883,
             //protocol :"mqtts",
             // keepalive: 10,
@@ -36,7 +38,7 @@ class MqttHandler {
     // Sends a mqtt message to topic: mytopic
     async sendMessage(message: string, topic: string) {
         return new Promise((resolve, reject) => {
-            this.mqttClient.publish(topic, message, { qos: 2, retain: true }, (err: any, result: any) => {
+            this.mqttClient.publish(topic, message, { qos: 1, retain: true }, (err: any, result: any) => {
                 if (err) reject(err)
                 else resolve(result)
             })

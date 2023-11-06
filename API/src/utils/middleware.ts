@@ -47,6 +47,7 @@ const tokenExtractor = (req: Request, res: Response, next: NextFunction) => {
     next()
 }
 
+// get user from token 
 const userExtractor = async (req: Request, response: Response, next: NextFunction) => {
     const token = req.token
     try {
@@ -64,7 +65,6 @@ const userExtractor = async (req: Request, response: Response, next: NextFunctio
     }
 
 }
-
 
 const adminRequire = async (req: Request, response: Response, next: NextFunction) => {
     const user = req.user

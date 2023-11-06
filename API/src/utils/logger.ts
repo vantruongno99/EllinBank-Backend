@@ -3,13 +3,14 @@ import DailyRotateFile from 'winston-daily-rotate-file';
 
 const { combine, timestamp, printf, json, align } = winston.format;
 
-
+//save received data from mqtt broker by day
 const transport1: DailyRotateFile = new DailyRotateFile({
     filename: './logs/subcriber/info/%DATE%.log',
     zippedArchive: true,
     datePattern: 'YYYY-MM-DD',
 });
 
+//save error/exception from by day
 const transport2: DailyRotateFile = new DailyRotateFile({
     filename: './logs/subcriber/error/%DATE%.log',
     datePattern: 'YYYY-MM-DD',
