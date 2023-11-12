@@ -8,16 +8,25 @@ require('express-async-errors');
 
 const userRouter = Router();
 
-userRouter.get('/', middleware.userExtractor, middleware.adminRequire, async (req: Request, res: Response) => {
+userRouter.get('/', middleware.userExtractor, middleware.adminRequire, async (req: Request, res: Response) => {    /* #swagger.security = [{
+        "bearerAuth": []
+    }] */
+   
     const users = await userService.findAllUser()
     res.status(200).json(users)
 })
 
-userRouter.get('/current', middleware.userExtractor, async (req: Request, res: Response) => {
+userRouter.get('/current', middleware.userExtractor, async (req: Request, res: Response) => {    /* #swagger.security = [{
+        "bearerAuth": []
+    }] */
+   
     res.status(200).json(req.user)
 })
 
-userRouter.get('/:username', middleware.userExtractor, middleware.adminRequire, async (req: Request, res: Response) => {
+userRouter.get('/:username', middleware.userExtractor, middleware.adminRequire, async (req: Request, res: Response) => {    /* #swagger.security = [{
+        "bearerAuth": []
+    }] */
+   
     const requestedUser: string = req.params.username
     if (!requestedUser) {
         res.status(500).send('username is blank')
@@ -31,7 +40,10 @@ userRouter.get('/:username', middleware.userExtractor, middleware.adminRequire, 
 })
 
 
-userRouter.post('/signup', middleware.userExtractor, middleware.adminRequire, async (req: Request, res: Response) => {
+userRouter.post('/signup', middleware.userExtractor, middleware.adminRequire, async (req: Request, res: Response) => {    /* #swagger.security = [{
+        "bearerAuth": []
+    }] */
+   
     const body: RegisterInput = req.body
     const user = await userService.createUser(body)
     res.status(200).send(user)
@@ -39,7 +51,10 @@ userRouter.post('/signup', middleware.userExtractor, middleware.adminRequire, as
 })
 
 
-userRouter.delete('/:username', middleware.userExtractor, middleware.adminRequire, async (req: Request, res: Response) => {
+userRouter.delete('/:username', middleware.userExtractor, middleware.adminRequire, async (req: Request, res: Response) => {    /* #swagger.security = [{
+        "bearerAuth": []
+    }] */
+   
     const requestedUser: string = req.params.username
     if (!requestedUser) {
         res.status(500).send('username is blank')
@@ -55,7 +70,10 @@ userRouter.delete('/:username', middleware.userExtractor, middleware.adminRequir
 })
 
 
-userRouter.post('/:username', middleware.userExtractor, middleware.adminRequire, async (req: Request, res: Response) => {
+userRouter.post('/:username', middleware.userExtractor, middleware.adminRequire, async (req: Request, res: Response) => {    /* #swagger.security = [{
+        "bearerAuth": []
+    }] */
+   
     const requestedUser: string = req.params.username
     const body: UserEditInput = req.body
     const updatedUser = await userService.editUser(requestedUser,body)

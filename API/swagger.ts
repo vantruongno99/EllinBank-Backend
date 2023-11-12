@@ -1,5 +1,7 @@
 import swaggerAutogen from 'swagger-autogen';
 
+const openAPI = swaggerAutogen({ openapi: '3.0.0' })
+
 
 const doc = {
     info: {
@@ -9,19 +11,26 @@ const doc = {
     },
     servers: [
         {
-            url: 'localhost:3003',              // by default: 'http://localhost:3000'
+            url: 'http://170.64.176.152:3003/api',              // by default: 'http://localhost:3000'
             description: ''       // by default: ''
         },
         // { ... }
     ],
-    tags: [                   // by default: empty Array
+    components: {
+        securitySchemes: {
+            bearerAuth: {
+                type: 'http',
+                scheme: 'bearer',
+                bearerFormat: "JWT"
+            }
+        }
+    },
+    security: [
         {
-            name: '',             // Tag name
-            description: ''       // Tag description
+            bearerAuth: [],
         },
-        // { ... }
     ],
-    components: {}            // by default: empty object
+
 };
 
 
@@ -29,5 +38,5 @@ const doc = {
 const outputFile = './swagger-output.json';
 const routes = ['./src/routes/routes.ts'];
 
-swaggerAutogen()(outputFile, routes, doc)
+openAPI(outputFile, routes, doc)
 

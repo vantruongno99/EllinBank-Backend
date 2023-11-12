@@ -40,6 +40,9 @@ const unknownEndpoint = (req: Request, res: Response) => {
 };
 
 const tokenExtractor = (req: Request, res: Response, next: NextFunction) => {
+      /* #swagger.security = [{
+        "bearerAuth": []
+    }] */
     const authorization = req.get('authorization')
     if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
         req.token = authorization.substring(7)

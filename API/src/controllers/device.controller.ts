@@ -9,62 +9,94 @@ const deviceRouter = Router();
 deviceRouter.use(middleware.userExtractor)
 
 
-deviceRouter.post('/', async (req: Request, res: Response) => {
+deviceRouter.post('/', async (req: Request, res: Response) => {    /* #swagger.security = [{
+        "bearerAuth": []
+    }] */
+
     const sensors = await deviceService.createDevice(req.body)
     res.status(200).json(sensors)
 })
 
-deviceRouter.put('/:deviceId', async (req: Request, res: Response) => {
+deviceRouter.put('/:deviceId', async (req: Request, res: Response) => {    /* #swagger.security = [{
+        "bearerAuth": []
+    }] */
+
     await deviceService.editDevice(req.params.deviceId, req.body)
     res.status(200).end()
 })
 
-deviceRouter.put('/:deviceId/pause', async (req: Request, res: Response) => {
+deviceRouter.put('/:deviceId/pause', async (req: Request, res: Response) => {    /* #swagger.security = [{
+        "bearerAuth": []
+    }] */
+
     await deviceService.pauseDevice(req.params.deviceId)
     res.status(200).end()
 })
 
-deviceRouter.put('/:deviceId/resume', async (req: Request, res: Response) => {
+deviceRouter.put('/:deviceId/resume', async (req: Request, res: Response) => {    /* #swagger.security = [{
+        "bearerAuth": []
+    }] */
+
     await deviceService.resumeDevice(req.params.deviceId)
     res.status(200).end()
 })
 
-deviceRouter.get('/', async (req: Request, res: Response) => {
+deviceRouter.get('/', async (req: Request, res: Response) => {    /* #swagger.security = [{
+        "bearerAuth": []
+    }] */
+
     const sensors = await deviceService.findAllDevice()
     res.status(200).json(sensors)
 })
 
-deviceRouter.get('/getAvaibleDevice', async (req: Request, res: Response) => {
+deviceRouter.get('/getAvaibleDevice', async (req: Request, res: Response) => {    /* #swagger.security = [{
+        "bearerAuth": []
+    }] */
+
     const sensors = await deviceService.findAvaibleDevice()
     res.status(200).json(sensors)
 })
 
 
 
-deviceRouter.get('/:deviceId', async (req: Request, res: Response) => {
+deviceRouter.get('/:deviceId', async (req: Request, res: Response) => {    /* #swagger.security = [{
+        "bearerAuth": []
+    }] */
+
     const deviceId = req.params.deviceId
     const sensors = await deviceService.findDevice(deviceId)
     res.status(200).json(sensors)
 })
 
-deviceRouter.delete('/:deviceId', async (req: Request, res: Response) => {
+deviceRouter.delete('/:deviceId', async (req: Request, res: Response) => {    /* #swagger.security = [{
+        "bearerAuth": []
+    }] */
+
     const deviceId = req.params.deviceId
     const deleteDevice = await deviceService.deleteDevice(deviceId)
     res.status(200).json(deleteDevice)
 })
 
-deviceRouter.post('/:deviceId/calibrate', async (req: Request, res: Response) => {
+deviceRouter.post('/:deviceId/calibrate', async (req: Request, res: Response) => {    /* #swagger.security = [{
+        "bearerAuth": []
+    }] */
+
     const deviceId: string = req.params.deviceId
     const input = req.body
     const result = await deviceService.calibrateSensor(deviceId, input)
     res.status(200).json(result)
 })
 
-deviceRouter.get('/:deviceId/:sensorType', async (req: Request, res: Response) => {
+deviceRouter.get('/:deviceId/:sensorType', async (req: Request, res: Response) => {    /* #swagger.security = [{
+        "bearerAuth": []
+    }] */
+
     const deviceId: string = req.params.deviceId
     const sensorType: string = req.params.sensorType
 
-    const isSensortype = (a: unknown): a is SensorType => {
+    const isSensortype = (a: unknown): a is SensorType => {    /* #swagger.security = [{
+        "bearerAuth": []
+    }] */
         return typeof a === "string" && SensorTypes.includes(a);
     }
 

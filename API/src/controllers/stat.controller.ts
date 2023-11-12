@@ -7,7 +7,9 @@ require('express-async-errors');
 
 const statController = Router();
 
-statController.get('/', middleware.userExtractor, async (req: Request, res: Response) => {
+statController.get('/', middleware.userExtractor, async (req: Request, res: Response) => {    /* #swagger.security = [{
+        "bearerAuth": []
+    }] */
     let company 
     if(req.user?.role === "user"){
         company = req.user.company

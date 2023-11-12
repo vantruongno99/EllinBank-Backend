@@ -10,17 +10,32 @@ companyRouter.use(middleware.userExtractor)
 
 
 companyRouter.post('/', async (req: Request, res: Response) => {
+
+    /* #swagger.security = [{
+               "bearerAuth": []
+       }] */
+
     const input: CompanyInput = req.body
     const newTask = await companyService.createCompany(input)
     res.status(200).json(newTask)
 })
 
 companyRouter.get('/', async (req: Request, res: Response) => {
+
+    /* #swagger.security = [{
+               "bearerAuth": []
+       }] */
+
     const sensors = await companyService.getAllCompany()
     res.status(200).json(sensors)
 })
 
 companyRouter.get('/:companyName/info', async (req: Request, res: Response) => {
+
+    /* #swagger.security = [{
+               "bearerAuth": []
+       }] */
+
     const companyName = req.params.companyName
     const query: CompanyQueryOption = req.query
     const company = await companyService.getAllCompanyData(companyName, query)
@@ -28,6 +43,11 @@ companyRouter.get('/:companyName/info', async (req: Request, res: Response) => {
 })
 
 companyRouter.get('/:companyName', async (req: Request, res: Response) => {
+
+    /* #swagger.security = [{
+               "bearerAuth": []
+       }] */
+
     const companyName = req.params.companyName
     const company = await companyService.getCompany(companyName)
     res.status(200).json(company)
