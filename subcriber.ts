@@ -7,12 +7,42 @@ import { Prisma } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
+
+
+
+type MQTTMessageData = { 
+    CO2?: CO2,
+    CH4?: CH4,
+    O2?: O2,
+    Temp?: Temp,
+    Pressure?: Pressure,
+    BAR?: BAR,
+    RH?: RH
+}
+
+interface MQTTMessage extends MQTTMessageData {
+    taskId: number,
+    timestampUTC: number,
+}
+
+type CO2 = {
+    logValue: number,
+    logNote: string
+}
+
+type O2 = CO2
+type CH4 = CO2
+type Temp = CO2
+type Pressure = CO2
+type BAR = CO2
+type RH = CO2
+
 const client = mqtt.connect({
     host: config.MQTT,
     port: 1883,
     protocol: "mqtt",
-    clean : false,
-    clientId :  'mqttjs_' + Math.random().toString(16).substr(2, 8)
+    clean: false,
+    clientId: 'mqttjs_' + Math.random().toString(16).substr(2, 8)
     // port: 8883,
     //protocol :"mqtts",
     // keepalive: 10,
@@ -31,6 +61,14 @@ export type Log = {
     deviceId: string
 }
 
+export type RawLog = {
+    taskId: number,
+    timestampUTC: number,
+    logType: string,
+    logValue: number,
+    logNote: string,
+}
+
 type Check = {
     taskId: number;
     timestampUTC: number;
@@ -40,7 +78,25 @@ type Check = {
 let logData: Log[] = []
 let n: number = 0
 
-async function main(data: any, topic: string) {
+async function main(data: string, topic: string) {
+
+    let isJSON = true;
+    let parsedData: RawLog[] = []
+
+    try {
+        parsedData = JSON.parse(data)
+    }
+    catch (e) {
+        isJSON = false
+    }
+
+    if (isJSON) {
+        const deviceId = topic.split('/')[1]
+        const log: Log[] = parsedData.map(a => ({ ...a, deviceId: deviceId }))
+        logData.concat(log)
+        return;
+    }
+
     const type = typeofMessage(data)
     switch (type) {
         case "LOG":
@@ -107,6 +163,37 @@ const addCheck = async (check: Check) => {
 
         }
     }
+}
+
+// If the Log MQTT messages are in JSON format 
+const dataExtract = (data: MQTTMessage, topic: string) : Log[] => {
+    const allData = {
+        ...data,
+        deviceId: topic.split('/')[1]
+    }
+
+    const data1 : MQTTMessageData =  (({ CO2, O2, CH4, BAR, RH, Temp, Pressure }) => ({ CO2, O2, CH4, BAR, RH, Temp, Pressure }))(allData);
+
+    const dataList: Log[] = []
+
+    const dataType = ['CO2', 'O2', 'CH4', 'BAR', 'RH', 'Temp', 'Pressure'] as (keyof typeof data1)[]
+
+    for ( let i = 0 ;i < dataType.length; i ++ ){
+        if (dataType[i] in  data1 ){
+            dataList.push({
+                taskId: allData.taskId,
+                timestampUTC: allData.timestampUTC,
+                logType: dataType[i],
+                logValue: data1[dataType[i]]?.logValue as number,
+                logNote: data1[dataType[i]]?.logNote as string,
+                deviceId: allData.deviceId
+            })
+        }
+    }
+
+    return dataList
+
+
 }
 
 function messsageReceived(topic: string, message: any, packet: any) {

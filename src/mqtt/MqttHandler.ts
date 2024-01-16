@@ -85,11 +85,60 @@ class MqttHandler {
 
     }
 
+
+    async receiveMessage(topicT: string, type: string) {
+        const toTopic = `ToServer/${topicT.split('/')[1]}`
+        const wait = () => {
+            return new Promise((_, reject) => {
+                setTimeout(() => {
+                    this.mqttClient.unsubscribe(toTopic, function (err: any) {
+                        console.log("unsubcribe")
+                    });
+                    reject(new Error('timeout succeeded'))
+                }
+                    , 5000);
+            });
+        }
+
+        const expect = () => new Promise((resolve, reject) => {
+
+            this.mqttClient.subscribe(toTopic, function (err: any) {
+                console.log("subcribe")
+            })
+
+            this.mqttClient.on('message', (topic: string, message: string) => {
+                const output = message.toString()
+                if (toTopic === topic.toString() && output.split(',')[0] === type) {
+                    this.mqttClient.unsubscribe(toTopic, function (err: any) {
+                        console.log("unsubcribe")
+                    });
+                    return resolve(output);
+                }
+            });
+        })
+
+
+        return await Promise.race([wait(), expect()]);
+
+    }
+
     async sendAndExpect(message: string, topic: string) {
         try {
             const type = message.split(',')[0]
             let [someResult, anotherResult] = await Promise.all([this.expectMessage(topic, type), await this.sendMessage(message, topic)]);
             return someResult
+        }
+
+        catch (err) {
+            throw new Error('no response')
+        }
+    }
+
+    async sendAndReceive(message: string, topic: string) {
+        try {
+            const type = message.split(',')[0]
+            let [someResult, anotherResult] = await Promise.all([this.expectMessage(topic, type), await this.receiveMessage(message, topic)]);
+            return anotherResult
         }
 
         catch (err) {
