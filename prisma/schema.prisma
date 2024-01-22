@@ -61,6 +61,7 @@ model Task {
   comment      String        @default("")
   name         String        @unique
   logPeriod    Int
+  flowRate     Decimal       
   status       String      @default("ONGOING")
   Device       Device_Task[]
   createUser   String

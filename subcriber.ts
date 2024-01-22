@@ -216,11 +216,11 @@ const logMessageHandle = (message: String, topic: String) => {
     const value: string[] = message.split(',')
     const deviceId = topic.split('/')[1]
     return ({
-        taskId: parseInt(value[1]),
-        timestampUTC: parseInt(value[2]),
-        logType: value[3],
-        logValue: parseFloat(value[4]),
-        logNote: value[5],
+        taskId: parseInt(value[3]),
+        timestampUTC: parseInt(value[4]),
+        logType: value[5],
+        logValue: parseFloat(value[6]),
+        logNote: value[7],
         deviceId
     })
 }

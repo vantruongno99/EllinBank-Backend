@@ -5,6 +5,7 @@ import mqttService from "./mqtt.service";
 import errorHandler from "../utils/errorHandler"
 import redisClient from "../redis/redisClient";
 import { Device_Task } from ".prisma/client";
+import { Prisma } from "@prisma/client";
 
 
 
@@ -41,15 +42,20 @@ const createTask = async (task: TaskInput, user: string | undefined): Promise<Ta
     throw ({ name: 'ValidationError', message: { endTime: ["can't be blank"] } });
   }
   if (new Date(endTime) < new Date(startTime)) {
-    throw ({ name: 'ValidationError', message: "" });
+    throw ({ name: 'ValidationError', message: { endTime: ["endTime must be later than startTime"] } });
   }
 
-
+  console.log( {
+    ...task,
+    createUser: user,
+    createdUTC: (new Date()).toISOString()
+  })
 
   try {
     const newTask = await prisma.task.create({
       data: {
         ...task,
+        flowRate: new Prisma.Decimal(task.flowRate),
         createUser: user,
         createdUTC: (new Date()).toISOString()
       }
@@ -58,7 +64,7 @@ const createTask = async (task: TaskInput, user: string | undefined): Promise<Ta
 
   }
   catch (e: any) {
-    errorHandler(e)
+    console.log(e)
   }
 }
 
@@ -91,6 +97,7 @@ const assignSensor = async (taskId: number, deviceId: string): Promise<Device_Ta
       startTimeUTC: Math.floor(new Date(task.startTime).getTime() / 1000),
       endTimeUTC: Math.floor(new Date(task.endTime).getTime() / 1000),
       logPeriod: task.logPeriod,
+      flowRate : new Prisma.Decimal(task.flowRate)
     }
 
     mqttService.sendConfigure(deviceId, config);
@@ -195,6 +202,8 @@ const updateTask = async (taskId: string, input: TaskEditInput): Promise<Task | 
       startTimeUTC: Math.floor(new Date(updatedTask.startTime).getTime() / 1000),
       endTimeUTC: Math.floor(new Date(updatedTask.endTime).getTime() / 1000),
       logPeriod: updatedTask.logPeriod,
+      flowRate : updatedTask.flowRate
+
     }
 
     for (const deviceId of deviceList) {

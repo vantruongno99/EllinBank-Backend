@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { Device } from "./device.modal";
 
 export interface TaskInput {
@@ -6,6 +7,7 @@ export interface TaskInput {
     name : string,
     logPeriod : number,
     status? : string
+    flowRate :  Prisma.Decimal
 }
 
 export interface TaskEditInput {
@@ -14,6 +16,8 @@ export interface TaskEditInput {
     name : string,
     logPeriod : number,
     comment : string,
+    flowRate : Prisma.Decimal
+
 }
 
 export interface LogQuery {
@@ -34,9 +38,12 @@ export interface LogOutput {
     logType: string;
     logValue: number;
     logNote: string;
+    flowRate : Prisma.Decimal
+
 }
 
 export type Task = {
+    flowRate : Prisma.Decimal
     id: number
     startTime: Date
     endTime: Date
