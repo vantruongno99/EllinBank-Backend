@@ -118,10 +118,9 @@ async function main(data: string, topic: string) {
 
 const addLogs = async (logs: Log[]) => {
     try {
-        const values = logs.map((log) => `('${log.timestampUTC}', '${log.logNote}', '${log.taskId}', '${log.deviceId}',' ${log.logValue}', '${log.logType}')`)
-        await prisma.$queryRawUnsafe(`INSERT INTO "Log" (timestampUTC,logNote,taskId,deviceId,logValue,logType) 
-        VALUES 
-         ${values.join(',')}`)
+       await prisma.log.createMany({
+        data : logs
+       })
     }
     catch (e) {
         subLogger.error(JSON.stringify(logs))
@@ -207,25 +206,25 @@ function messsageReceived(topic: string, message: any, packet: any) {
     }
 };
 
-const typeofMessage = (message: String) => {
-    const type = message.split(',')[0]
+const typeofMessage = (message: string) => {
+    const type = message.split(';')[0]
     return type
 }
 
-const logMessageHandle = (message: String, topic: String) => {
-    const value: string[] = message.split(',')
+const logMessageHandle = (message: string, topic: string) => {
+    const value: string[] = message.split(';')
     const deviceId = topic.split('/')[1]
     return ({
         taskId: parseInt(value[3]),
-        timestampUTC: parseInt(value[4]),
-        logType: value[5],
-        logValue: parseFloat(value[6]),
-        logNote: value[7],
+        timestampUTC: parseInt(value[5]),
+        logType: value[6],
+        logValue: parseFloat(value[7]),
+        logNote: value[8],
         deviceId
     })
 }
-const checkMessageHandle = (message: String, topic: String) => {
-    const value: string[] = message.split(',')
+const checkMessageHandle = (message: string, topic: string) => {
+    const value: string[] = message.split(';')
     const deviceId = topic.split('/')[1]
     return ({
         taskId: parseInt(value[1]),
@@ -253,7 +252,7 @@ setInterval(() => {
     const logs: Log[] = logData;
     logData = []
     if (logs.length !== 0) {
-        addLogs(logs)
+       addLogs(logs)
     }
 }, 1000)
 

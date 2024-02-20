@@ -5,12 +5,12 @@ class MqttHandler {
     mqttClient: any;
     constructor() {
 
-        this.mqttClient =  mqtt.connect({
+        this.mqttClient = mqtt.connect({
             host: config.MQTT,
             port: 1883,
             protocol: "mqtt",
-            clean : false,
-            clientId :  'mqttjs_' + Math.random().toString(16).substr(2, 8),
+            clean: false,
+            clientId: 'mqttjs_' + Math.random().toString(16).substr(2, 8),
             // port: 8883,
             //protocol :"mqtts",
             // keepalive: 10,
@@ -65,16 +65,13 @@ class MqttHandler {
 
         const expect = () => new Promise((resolve, reject) => {
 
-            this.mqttClient.subscribe(toTopic, function (err: any) {
+            this.mqttClient.subscribe(toTopic, { qos: 1 }, function (err: any) {
                 console.log("subcribe")
             })
 
             this.mqttClient.on('message', (topic: string, message: string) => {
                 const output = message.toString()
-                if (toTopic === topic.toString() && output.split(',')[0] === type) {
-                    this.mqttClient.unsubscribe(toTopic, function (err: any) {
-                        console.log("unsubcribe")
-                    });
+                if (toTopic === topic.toString() && output.split(';')[0] === type) {
                     return resolve(output);
                 }
             });
@@ -94,7 +91,7 @@ class MqttHandler {
                     this.mqttClient.unsubscribe(toTopic, function (err: any) {
                         console.log("unsubcribe")
                     });
-                    reject(new Error('timeout succeeded'))
+                    reject(new Error('timeout'))
                 }
                     , 5000);
             });
@@ -102,16 +99,14 @@ class MqttHandler {
 
         const expect = () => new Promise((resolve, reject) => {
 
-            this.mqttClient.subscribe(toTopic, function (err: any) {
+            this.mqttClient.subscribe(toTopic, { qos: 1 }, function (err: any) {
                 console.log("subcribe")
             })
 
             this.mqttClient.on('message', (topic: string, message: string) => {
                 const output = message.toString()
-                if (toTopic === topic.toString() && output.split(',')[0] === type) {
-                    this.mqttClient.unsubscribe(toTopic, function (err: any) {
-                        console.log("unsubcribe")
-                    });
+                if (toTopic === topic.toString() && output.split(';')[0] === type) {
+0
                     return resolve(output);
                 }
             });
@@ -124,27 +119,47 @@ class MqttHandler {
 
     async sendAndExpect(message: string, topic: string) {
         try {
-            const type = message.split(',')[0]
+            const type = message.split(';')[0]
             let [someResult, anotherResult] = await Promise.all([this.expectMessage(topic, type), await this.sendMessage(message, topic)]);
-            return someResult
+            return checkResponseMessage(someResult as string)
         }
 
         catch (err) {
-            throw new Error('no response')
-        }
+            if (typeof err === "string") {
+                throw new Error(err)
+            }
+            else {
+                throw new Error('no response')
+            }        }
     }
 
     async sendAndReceive(message: string, topic: string) {
         try {
-            const type = message.split(',')[0]
+            const type = message.split(';')[0]
             let [someResult, anotherResult] = await Promise.all([this.expectMessage(topic, type), await this.receiveMessage(message, topic)]);
-            return anotherResult
+            return checkResponseMessage(someResult as string)
         }
 
         catch (err) {
-            throw new Error('no response')
+            if (typeof err === "string") {
+                throw new Error(err)
+            }
+            else {
+                throw new Error('no response')
+            }
         }
     }
+}
+
+const checkResponseMessage = (message: string):string => {
+    const msg = message.split(";")
+    if (!msg[2]) {
+        throw "Invalid response message "
+    }
+    if (msg[1] === "NOK") {
+        throw `Failed code : ${msg[2]}`
+    }
+    return message
 }
 
 

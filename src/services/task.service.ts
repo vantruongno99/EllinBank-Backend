@@ -45,7 +45,7 @@ const createTask = async (task: TaskInput, user: string | undefined): Promise<Ta
     throw ({ name: 'ValidationError', message: { endTime: ["endTime must be later than startTime"] } });
   }
 
-  console.log( {
+  console.log({
     ...task,
     createUser: user,
     createdUTC: (new Date()).toISOString()
@@ -91,13 +91,23 @@ const assignSensor = async (taskId: number, deviceId: string): Promise<Device_Ta
       }
     })
 
+    const device = await prisma.device.findUniqueOrThrow({
+      where: {
+        id: deviceId,
+      }
+    })
+
+
+
     const config: ConfigSend = {
       taskId: taskId,
       msgTimeUTC: Math.floor(Date.now() / 1000),
       startTimeUTC: Math.floor(new Date(task.startTime).getTime() / 1000),
       endTimeUTC: Math.floor(new Date(task.endTime).getTime() / 1000),
       logPeriod: task.logPeriod,
-      flowRate : new Prisma.Decimal(task.flowRate)
+      flowRate: new Prisma.Decimal(task.flowRate),
+      deviceName: device.name,
+      taskName: task.name
     }
 
     mqttService.sendConfigure(deviceId, config);
@@ -194,20 +204,27 @@ const updateTask = async (taskId: string, input: TaskEditInput): Promise<Task | 
     })
     const { Device, ...newTaskDetail } = updatedTask
 
-    const deviceList = updatedTask.Device.map(a => a.Device.id)
+    const deviceList = updatedTask.Device.map(a => ({
+      id: a.Device.id,
+      name: a.Device.name
+    }))
 
-    const config: ConfigSend = {
+    const config = {
       taskId: updatedTask.id,
       msgTimeUTC: Math.floor(Date.now() / 1000),
       startTimeUTC: Math.floor(new Date(updatedTask.startTime).getTime() / 1000),
       endTimeUTC: Math.floor(new Date(updatedTask.endTime).getTime() / 1000),
       logPeriod: updatedTask.logPeriod,
-      flowRate : updatedTask.flowRate
-
+      flowRate: updatedTask.flowRate,
     }
 
-    for (const deviceId of deviceList) {
-      await mqttService.sendConfigure(deviceId, config)
+    for (const device of deviceList) {
+      await mqttService.sendConfigure(device.id, {
+        ...config,
+        deviceName: device.name,
+        taskName: updatedTask.name
+      }
+      )
     }
 
     return newTaskDetail

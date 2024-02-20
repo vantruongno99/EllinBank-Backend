@@ -117,18 +117,16 @@ function generateRandomString(length: number) {
     return result;
 }
 
-const deviceList = Array.from({ length: 2 }, () => generateRandomString(6));
+const deviceList = Array.from({ length: 1 }, () => generateRandomString(6));
 
 
 setInterval(() => {
     const d = new Date();
     let time = d.getTime() ;
-    const objectList = Array.from({ length: 40 }, () => `LOG,56,${time},test,${Math.floor(Math.random() * 10000)},`);
+    const objectList = Array.from({ length: 40 }, () => `LOG;1;test1;18;testtest;${time};test;${Math.floor(Math.random() * 10000)};`);
 
 
-    for (const device of deviceList) {
-        publish(`ToServer/${device}`, objectList[Math.floor(Math.random() * 40)])
-    }
+        publish(`ToServer/test1`, objectList[Math.floor(Math.random() * 40)])
 
 }, 1000);
 
