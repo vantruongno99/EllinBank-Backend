@@ -32,7 +32,7 @@ const pauseTask = async (deviceId: string, taskId: number) => {
 // Send task stop message to mqtt broker
 const stopTask = async (deviceId: string, taskId: number) => {
     try {
-        await mqttClient.sendMessage(`CFG;STOP;${taskId}`, `ToSensor/${deviceId}`);
+        await mqttClient.sendMessage(`CFG;ERASE;${taskId}`, `ToSensor/${deviceId}`);
     }
     catch(e) {
         console.log(e);
